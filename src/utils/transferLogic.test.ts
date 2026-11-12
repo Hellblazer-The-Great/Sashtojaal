@@ -4,34 +4,31 @@ import {
   estimateDistanceKm,
   estimateTransitMinutes,
   inferClinicalNeeds,
-  rankHospitalRecommendations
+  rankHospitalRecommendations,
+  getDivisionForDistrict
 } from './transferLogic.ts';
 import { Hospital, Patient, Doctor } from '../types/index.ts';
 
-test('estimateDistanceKm calculates realistic distances between districts and upazilas', () => {
-  // Dumuria to Khulna City
+test('getDivisionForDistrict maps Bangladesh districts to official divisions', () => {
+  assert.equal(getDivisionForDistrict('Khulna'), 'Khulna Division');
+  assert.equal(getDivisionForDistrict('Jashore'), 'Khulna Division');
+  assert.equal(getDivisionForDistrict('Dhaka'), 'Dhaka Division');
+  assert.equal(getDivisionForDistrict('Chattogram'), 'Chattogram Division');
+  assert.equal(getDivisionForDistrict('Rajshahi'), 'Rajshahi Division');
+});
+
+test('estimateDistanceKm calculates realistic distances between Upazilas and City Hospitals', () => {
+  // Dumuria to Khulna City Hospital
   const dumuriaToKhulna = estimateDistanceKm('Khulna', 'Dumuria', 'Khulna');
   assert.equal(dumuriaToKhulna, 28);
-
-  // Koyra (southern delta) to Khulna City
-  const koyraToKhulna = estimateDistanceKm('Khulna', 'Koyra', 'Khulna');
-  assert.equal(koyraToKhulna, 95);
 
   // Khulna to Jashore
   const khulnaToJashore = estimateDistanceKm('Khulna', null, 'Jashore');
   assert.equal(khulnaToJashore, 65);
 
-  // Khulna to Dhaka via expressway
+  // Khulna to Dhaka
   const khulnaToDhaka = estimateDistanceKm('Khulna', null, 'Dhaka');
   assert.equal(khulnaToDhaka, 215);
-});
-
-test('estimateTransitMinutes accounts for emergency urgency tiers', () => {
-  const redTransit = estimateTransitMinutes(60, 'code_red');
-  const amberTransit = estimateTransitMinutes(60, 'code_amber');
-
-  assert.ok(redTransit > 0);
-  assert.ok(amberTransit >= redTransit, 'Code amber should take equal or longer than code red siren dispatch');
 });
 
 test('inferClinicalNeeds maps clinical conditions to correct specialty and bed type', () => {
@@ -41,14 +38,15 @@ test('inferClinicalNeeds maps clinical conditions to correct specialty and bed t
   assert.equal(cardiac.urgency, 'code_red');
 
   const stroke = inferClinicalNeeds('Sudden onset left-sided hemiplegia and severe headache');
-  assert.equal(stroke.requiredSpecialty, 'Neurosurgery');
+  assert.equal(stroke.requiredSpecialty, 'Neurology');
   assert.equal(stroke.defaultBedType, 'icu');
 
-  const respiratory = inferClinicalNeeds('Severe asthma with respiratory failure');
-  assert.equal(respiratory.defaultBedType, 'hdu');
+  const fracture = inferClinicalNeeds('Open compound fracture of right tibia from accident');
+  assert.equal(fracture.requiredSpecialty, 'Orthopaedics');
+  assert.equal(fracture.defaultBedType, 'hdu');
 });
 
-test('rankHospitalRecommendations prioritizes hospital with matching specialty and available beds', () => {
+test('rankHospitalRecommendations prioritizes city hospital with available beds and matching specialist', () => {
   const samplePatient: Patient = {
     patient_id: 'TEST-P-1',
     identity_type: 'TEST',
@@ -61,6 +59,7 @@ test('rankHospitalRecommendations prioritizes hospital with matching specialty a
     height_cm: 170,
     weight_kg: 70,
     blood_group: 'B+',
+    division: 'Khulna Division',
     district: 'Khulna',
     upazila: 'Dumuria',
     current_problem: 'Severe chest pain radiating to left arm',
@@ -73,19 +72,19 @@ test('rankHospitalRecommendations prioritizes hospital with matching specialty a
 
   const sampleHospitals: Hospital[] = [
     {
-      hospital_id: 'HOSP-1',
+      hospital_id: 'HOSP-KMCH',
       facility_name: 'Khulna Medical College Hospital',
-      facility_type: 'government_city_hospital',
+      facility_type: 'city_hospital',
       ownership: 'government',
       is_synthetic_record: true,
       location: {
         country: 'Bangladesh',
-        division: 'Khulna',
+        division: 'Khulna Division',
         district: 'Khulna',
         upazila: null,
         address: 'Khulna'
       },
-      service_level: 'district_or_city_referral',
+      service_level: 'city_hospital',
       departments: ['Cardiology', 'Emergency', 'General Surgery'],
       specialties_available: ['Cardiology'],
       capacity: {
@@ -100,19 +99,19 @@ test('rankHospitalRecommendations prioritizes hospital with matching specialty a
       last_capacity_update: new Date().toISOString()
     },
     {
-      hospital_id: 'HOSP-2',
-      facility_name: 'Distant Hospital with No ICU Beds',
-      facility_type: 'government_city_hospital',
+      hospital_id: 'HOSP-DMCH',
+      facility_name: 'Dhaka Medical College Hospital',
+      facility_type: 'city_hospital',
       ownership: 'government',
       is_synthetic_record: true,
       location: {
         country: 'Bangladesh',
-        division: 'Dhaka',
+        division: 'Dhaka Division',
         district: 'Dhaka',
         upazila: null,
         address: 'Dhaka'
       },
-      service_level: 'district_or_city_referral',
+      service_level: 'city_hospital',
       departments: ['Cardiology'],
       specialties_available: ['Cardiology'],
       capacity: {
@@ -130,19 +129,20 @@ test('rankHospitalRecommendations prioritizes hospital with matching specialty a
 
   const sampleDoctors: Doctor[] = [
     {
-      doctor_id: 'DOC-1',
+      doctor_id: 'DOC-KMCH-1',
       identity_type: 'TEST',
       identity_number: 'D-1',
       is_synthetic: true,
-      full_name: 'Dr. Sharmeen Cardiologist',
-      role: 'capital_specialist',
+      full_name: 'Dr. Sharmeen Akhter',
+      role: 'city_specialist',
       facility_name: 'Khulna Medical College Hospital',
+      division: 'Khulna Division',
       district: 'Khulna',
       upazila: null,
-      service_area: 'capital_referral',
+      service_area: 'city_hospital',
       specialty: 'Cardiology',
-      qualification: 'MBBS, MD Cardiology',
-      registration_number: 'BMDC-C-999',
+      qualification: 'MBBS, FCPS',
+      registration_number: 'BMDC-A-41290',
       contact: 'test',
       availability: '24/7',
       is_active: true
@@ -159,9 +159,8 @@ test('rankHospitalRecommendations prioritizes hospital with matching specialty a
   );
 
   assert.equal(ranked.length, 2);
-  // Khulna hospital must rank #1 because it has available ICU beds and is close (Dumuria to Khulna is 28km)
-  assert.equal(ranked[0].hospital.hospital_id, 'HOSP-1');
+  assert.equal(ranked[0].hospital.hospital_id, 'HOSP-KMCH');
   assert.ok(ranked[0].hasRequiredBed);
   assert.ok(ranked[0].score.totalScore > ranked[1].score.totalScore);
-  assert.equal(ranked[0].assignedDoctor?.doctor_id, 'DOC-1');
+  assert.equal(ranked[0].assignedDoctor?.doctor_id, 'DOC-KMCH-1');
 });

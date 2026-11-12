@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Doctor, Hospital, Patient, HospitalRecommendation } from '../types/index.ts';
 import { rankHospitalRecommendations, inferClinicalNeeds } from '../utils/transferLogic.ts';
 import { dataService } from '../services/dataService.ts';
-import { X, AlertCircle, CheckCircle2, ChevronRight, Stethoscope, Bed, Clock, Navigation, ShieldAlert, Sparkles } from 'lucide-react';
+import { X, AlertCircle, CheckCircle2, ChevronRight, Stethoscope, Bed, Clock, Navigation, ShieldAlert, Sparkles, MapPin } from 'lucide-react';
 
 interface EmergencyTransferModalProps {
   isOpen: boolean;
@@ -25,48 +25,50 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
   preselectedPatient,
   onTransferDispatched
 }) => {
-  // Step in modal: 1 = Clinical Details, 2 = AI Matching & Facility Selection, 3 = Confirmation
   const [step, setStep] = useState<1 | 2>(1);
 
-  // Patient selection mode: 'existing' | 'new'
+  // Filter accessible patients for Upazila Doctor by their division
+  const divisionAccessiblePatients = useMemo(() => {
+    if (activeDoctor.role === 'upazila_doctor') {
+      return patients.filter((p) => p.division === activeDoctor.division);
+    }
+    return patients;
+  }, [patients, activeDoctor]);
+
   const [patientMode, setPatientMode] = useState<'existing' | 'new'>('existing');
   const [selectedPatientId, setSelectedPatientId] = useState<string>(
-    preselectedPatient ? preselectedPatient.patient_id : patients[0]?.patient_id || ''
+    preselectedPatient ? preselectedPatient.patient_id : divisionAccessiblePatients[0]?.patient_id || ''
   );
 
-  // New patient form fields
   const [newPatient, setNewPatient] = useState({
     fullName: '',
     ageYears: 45,
     sex: 'Male' as 'Male' | 'Female' | 'Other',
     bloodGroup: 'B+',
+    division: activeDoctor.division,
     district: activeDoctor.district || 'Khulna',
     upazila: activeDoctor.upazila || 'Dumuria',
     condition: 'Acute Myocardial Infarction',
-    problemDescription: 'Severe crushing chest pain radiating to left jaw, profuse diaphoresis, hypotensive.',
-    symptomDuration: '2 hours'
+    problemDescription: 'Severe crushing retrosternal chest pain with diaphoresis, hypotensive.',
+    symptomDuration: '90 minutes'
   });
 
-  // Clinical parameters
   const [clinicalCondition, setClinicalCondition] = useState<string>('Acute Myocardial Infarction');
   const [clinicalDescription, setClinicalDescription] = useState<string>(
-    'Severe chest pain, hemodynamic instability. Initial ECG demonstrates 3mm ST-elevations in V1-V4.'
+    'Severe chest pain with hemodynamic collapse. Initial ECG demonstrates 3mm ST-elevations in anterior leads.'
   );
   const [urgency, setUrgency] = useState<'code_red' | 'code_amber' | 'code_yellow'>('code_red');
   const [bedType, setBedType] = useState<'icu' | 'hdu' | 'general'>('icu');
   const [primarySpecialty, setPrimarySpecialty] = useState<string>('Cardiology');
 
-  // Vitals
   const [bp, setBp] = useState<string>('85/55');
   const [heartRate, setHeartRate] = useState<number>(115);
   const [spo2, setSpo2] = useState<number>(88);
   const [temp, setTemp] = useState<number>(98.6);
   const [gcs, setGcs] = useState<number>(13);
 
-  // Selected Recommendation
   const [selectedHospitalId, setSelectedHospitalId] = useState<string>('');
 
-  // When patient selection changes, auto-fill condition
   const currentPatient: Patient = useMemo(() => {
     if (patientMode === 'new') {
       return {
@@ -81,22 +83,22 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
         height_cm: 168,
         weight_kg: 68,
         blood_group: newPatient.bloodGroup,
+        division: activeDoctor.division,
         district: newPatient.district,
         upazila: newPatient.upazila,
         current_problem: newPatient.condition,
         problem_description: newPatient.problemDescription,
         symptom_duration: newPatient.symptomDuration,
         known_allergies: 'None recorded in emergency triage',
-        chronic_conditions: ['To be determined'],
+        chronic_conditions: ['Pending clinical review'],
         last_checkup_date: new Date().toISOString().split('T')[0]
       };
     }
-    const found = patients.find((p) => p.patient_id === selectedPatientId);
+    const found = divisionAccessiblePatients.find((p) => p.patient_id === selectedPatientId);
     if (found) return found;
-    return patients[0] || ({} as Patient);
-  }, [patientMode, selectedPatientId, newPatient, patients]);
+    return divisionAccessiblePatients[0] || ({} as Patient);
+  }, [patientMode, selectedPatientId, newPatient, divisionAccessiblePatients, activeDoctor]);
 
-  // Auto-infer recommendation criteria when condition updates
   const handleAutoInfer = () => {
     const textToAnalyze = clinicalCondition || currentPatient.current_problem || '';
     const inferred = inferClinicalNeeds(textToAnalyze);
@@ -105,7 +107,6 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
     setUrgency(inferred.urgency);
   };
 
-  // Compute recommendations
   const recommendations: HospitalRecommendation[] = useMemo(() => {
     if (!currentPatient || !isOpen) return [];
     return rankHospitalRecommendations(
@@ -118,7 +119,6 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
     );
   }, [currentPatient, hospitals, doctors, bedType, primarySpecialty, urgency, isOpen]);
 
-  // Auto-select best hospital when recommendations update
   const bestHospital = recommendations[0];
   const chosenRecommendation = recommendations.find((r) => r.hospital.hospital_id === selectedHospitalId) || bestHospital;
 
@@ -127,12 +127,14 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
   const handleDispatch = () => {
     if (!chosenRecommendation) return;
 
-    // Register new patient if created
     if (patientMode === 'new') {
       dataService.registerEmergencyPatient(currentPatient);
     }
 
-    const assignedDoc = chosenRecommendation.assignedDoctor || doctors.find((d) => d.role === 'capital_specialist') || activeDoctor;
+    const assignedDoc =
+      chosenRecommendation.assignedDoctor ||
+      doctors.find((d) => d.role === 'city_specialist') ||
+      activeDoctor;
 
     const newTransfer = dataService.dispatchEmergencyTransfer({
       patient: currentPatient,
@@ -159,7 +161,7 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-700 text-slate-100 rounded-xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+      <div className="bg-slate-900 border border-slate-700 text-slate-100 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-5 py-3.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -168,13 +170,13 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white">Emergency Transfer Dispatch</h2>
+                <h2 className="text-base font-bold text-white">Emergency Transfer Dispatch to City Hospital</h2>
                 <span className="text-[10px] bg-rose-950 text-rose-300 border border-rose-800 font-mono px-1.5 py-0.5 rounded uppercase">
-                  DGHS Rapid Protocol
+                  Upazila Rapid Protocol
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Originating: <span className="text-slate-200">{activeDoctor.facility_name}</span> ({activeDoctor.district})
+                Referring Upazila Doctor: <span className="text-slate-200 font-semibold">{activeDoctor.full_name}</span> ({activeDoctor.facility_name}, {activeDoctor.division})
               </p>
             </div>
           </div>
@@ -186,7 +188,7 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
           </button>
         </div>
 
-        {/* Modal Stepper */}
+        {/* Stepper */}
         <div className="px-5 py-2.5 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between text-xs">
           <div className="flex items-center gap-4">
             <button
@@ -196,7 +198,7 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
               <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${step === 1 ? 'bg-teal-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
                 1
               </span>
-              Clinical Triage & Patient
+              Clinical Triage &amp; Division Patient
             </button>
             <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
             <button
@@ -206,7 +208,7 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
               <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${step === 2 ? 'bg-teal-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
                 2
               </span>
-              Semi-Automated Facility & Specialist Match
+              City Hospital &amp; Specialist Match
             </button>
           </div>
 
@@ -222,7 +224,12 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
               {/* Patient Selection Mode */}
               <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800">
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs font-semibold text-slate-200">Patient Source</label>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-semibold text-slate-200">Patient Selection</label>
+                    <span className="text-[10px] bg-blue-950 text-blue-300 border border-blue-800 px-1.5 py-0.2 rounded font-mono">
+                      {activeDoctor.division} Only
+                    </span>
+                  </div>
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -233,7 +240,7 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                           : 'bg-slate-800 text-slate-400 hover:text-slate-200'
                       }`}
                     >
-                      Government Registry (1,000 cases)
+                      Division Registry ({divisionAccessiblePatients.length} cases)
                     </button>
                     <button
                       type="button"
@@ -252,11 +259,11 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                 {patientMode === 'existing' ? (
                   <div>
                     <select
-                      aria-label="Select Patient from Government Registry"
+                      aria-label="Select Patient from Division Registry"
                       value={selectedPatientId}
                       onChange={(e) => {
                         setSelectedPatientId(e.target.value);
-                        const p = patients.find((item) => item.patient_id === e.target.value);
+                        const p = divisionAccessiblePatients.find((item) => item.patient_id === e.target.value);
                         if (p) {
                           setClinicalCondition(p.current_problem);
                           setClinicalDescription(p.problem_description);
@@ -264,9 +271,9 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                       }}
                       className="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 outline-none focus:border-teal-500"
                     >
-                      {patients.slice(0, 150).map((p) => (
+                      {divisionAccessiblePatients.slice(0, 100).map((p) => (
                         <option key={p.patient_id} value={p.patient_id}>
-                          {p.full_name} ({p.age_years}y, {p.sex}) — {p.district}/{p.upazila} — {p.current_problem}
+                          {p.full_name} ({p.age_years}y, {p.sex}) — {p.upazila}, {p.district} — {p.current_problem}
                         </option>
                       ))}
                     </select>
@@ -284,15 +291,15 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-400 block text-[10px]">REGISTERED LOCATION</span>
+                          <span className="text-slate-400 block text-[10px]">UPAZILA / DIVISION</span>
                           <span className="text-slate-200">
-                            {currentPatient.upazila}, {currentPatient.district}
+                            {currentPatient.upazila}, {currentPatient.division}
                           </span>
                         </div>
                         <div>
                           <span className="text-slate-400 block text-[10px]">CHRONIC COMORBIDITIES</span>
                           <span className="text-slate-300 truncate block">
-                            {currentPatient.chronic_conditions?.join(', ') || 'None'}
+                            {currentPatient.chronic_conditions?.join(', ') || 'None reported'}
                           </span>
                         </div>
                       </div>
@@ -304,14 +311,14 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                       <label className="text-slate-400 block mb-1">Full Name</label>
                       <input
                         type="text"
-                        placeholder="e.g. Md. Shahidul Islam"
+                        placeholder="e.g. Md. Rafiqul Islam"
                         value={newPatient.fullName}
                         onChange={(e) => setNewPatient({ ...newPatient, fullName: e.target.value })}
                         className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100"
                       />
                     </div>
                     <div>
-                      <label className="text-slate-400 block mb-1">Age & Sex</label>
+                      <label className="text-slate-400 block mb-1">Age &amp; Sex</label>
                       <div className="flex gap-2">
                         <input
                           type="number"
@@ -361,18 +368,18 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                     className="flex items-center gap-1.5 text-[11px] bg-teal-900/60 hover:bg-teal-900 text-teal-300 border border-teal-700/60 px-2 py-1 rounded transition-colors"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-teal-400" />
-                    <span>Auto-Infer Specialty & Bed Priority</span>
+                    <span>Auto-Infer Specialty &amp; Bed Priority</span>
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   <div className="sm:col-span-2">
-                    <label className="text-slate-400 block mb-1">Primary Emergency Diagnosis</label>
+                    <label className="text-slate-400 block mb-1">Emergency Diagnosis</label>
                     <input
                       type="text"
                       value={clinicalCondition}
                       onChange={(e) => setClinicalCondition(e.target.value)}
-                      placeholder="e.g. Acute STEMI, Subdural Hematoma, Ruptured Appendicitis"
+                      placeholder="e.g. Acute STEMI, Compound Fracture, Perforated Viscus"
                       className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100"
                     />
                   </div>
@@ -398,12 +405,12 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-slate-400 block mb-1 text-xs">Clinical Summary & Treatment at Upazila</label>
+                  <label className="text-slate-400 block mb-1 text-xs">Clinical Summary &amp; Treatment at Upazila</label>
                   <textarea
                     rows={2}
                     value={clinicalDescription}
                     onChange={(e) => setClinicalDescription(e.target.value)}
-                    placeholder="Brief description of symptoms, local interventions (e.g. IV access, O2, sublingual nitrates) and justification for tertiary transfer..."
+                    placeholder="Brief description of symptoms, local interventions and justification for city hospital transfer..."
                     className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-slate-200 outline-none focus:border-teal-500"
                   />
                 </div>
@@ -430,27 +437,24 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-slate-400 block mb-1">Target Specialist Department</label>
+                    <label className="text-slate-400 block mb-1">Target Specialist Specialty</label>
                     <select
-                      aria-label="Target Specialist Department"
+                      aria-label="Target Specialist Specialty"
                       value={primarySpecialty}
                       onChange={(e) => setPrimarySpecialty(e.target.value)}
                       className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-100 text-xs"
                     >
-                      <option value="Cardiology">Cardiology / Coronary Care</option>
-                      <option value="Neurosurgery">Neurosurgery & Spine</option>
-                      <option value="Neurology">Neurology</option>
-                      <option value="Internal Medicine">Internal Medicine / Critical Care</option>
-                      <option value="General Surgery">General & Trauma Surgery</option>
-                      <option value="Nephrology">Nephrology & Dialysis</option>
-                      <option value="Paediatrics">Paediatric Intensive Care</option>
-                      <option value="Endocrinology">Endocrinology</option>
+                      <option value="General Surgery">General &amp; Laparoscopic Surgery</option>
+                      <option value="Cardiology">Cardiology &amp; CCU</option>
+                      <option value="Orthopaedics">Orthopaedics &amp; Trauma</option>
+                      <option value="Neurology">Neurology &amp; Neuro-Critical Care</option>
+                      <option value="Internal Medicine">Internal &amp; Critical Care Medicine</option>
                     </select>
                   </div>
                 </div>
               </div>
 
-              {/* Real-Time Initial Vitals */}
+              {/* Emergency Vitals */}
               <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800">
                 <label className="text-xs font-semibold text-slate-200 block mb-2">
                   Emergency Vitals (Recorded at {activeDoctor.facility_name})
@@ -518,10 +522,10 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
               <div className="p-3 bg-teal-950/40 border border-teal-800/60 rounded-lg text-xs text-teal-200 flex items-start gap-2.5">
                 <Sparkles className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-semibold text-white">Semi-Automated Transfer Matching Active:</span> Evaluating{' '}
-                  <span className="text-teal-300 font-bold">{hospitals.filter((h) => h.service_level === 'district_or_city_referral').length} tertiary hospitals</span>{' '}
-                  for requested <span className="font-mono text-emerald-400 uppercase">{bedType}</span> bed &amp;{' '}
-                  <span className="font-bold text-white">{primarySpecialty}</span> specialty.
+                  <span className="font-semibold text-white">City Hospital Matching Active:</span> Evaluating the{' '}
+                  <span className="text-teal-300 font-bold">5 designated city hospitals</span> across Bangladesh for requested{' '}
+                  <span className="font-mono text-emerald-400 uppercase">{bedType}</span> bed &amp;{' '}
+                  <span className="font-bold text-white">{primarySpecialty}</span> specialist consultant.
                 </div>
               </div>
 
@@ -563,14 +567,16 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                                   Top Recommendation
                                 </span>
                               )}
+                              <span className="text-[10px] bg-slate-800 text-slate-300 border border-slate-700 px-1.5 py-0.2 rounded font-mono">
+                                {rec.hospital.location.division}
+                              </span>
                             </div>
                             <p className="text-xs text-slate-400 mt-0.5">
-                              {rec.hospital.location.district} Division • {rec.hospital.location.address}
+                              {rec.hospital.location.district} District • {rec.hospital.location.address}
                             </p>
                           </div>
                         </div>
 
-                        {/* Overall Score Badge */}
                         <div className="text-right">
                           <div className="flex items-baseline justify-end gap-1">
                             <span className="text-lg font-mono font-bold text-teal-400">
@@ -582,7 +588,7 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Distance & Bed Availability Highlights */}
+                      {/* Distance & Bed Highlights */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 pt-3 border-t border-slate-800/80 text-xs">
                         <div className="flex items-center gap-2">
                           <Navigation className="w-3.5 h-3.5 text-blue-400 shrink-0" />
@@ -623,9 +629,9 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                         <div className="flex items-center gap-2">
                           <Stethoscope className="w-3.5 h-3.5 text-teal-400 shrink-0" />
                           <div>
-                            <span className="text-[10px] text-slate-400 block">ASSIGNED SPECIALIST</span>
+                            <span className="text-[10px] text-slate-400 block">DESIGNATED SPECIALIST</span>
                             <span className="text-slate-200 font-medium truncate block max-w-[130px]">
-                              {rec.assignedDoctor ? rec.assignedDoctor.full_name : 'On-Duty Consultant'}
+                              {rec.assignedDoctor ? rec.assignedDoctor.full_name : 'City Consultant'}
                             </span>
                           </div>
                         </div>
@@ -634,9 +640,9 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                       {/* Reasoning list */}
                       <div className="mt-3 bg-slate-900/60 p-2.5 rounded border border-slate-800/80 text-[11px] text-slate-300 space-y-1">
                         <div className="flex items-center gap-2 text-slate-400 font-semibold text-[10px] uppercase">
-                          <span>Algorithm Matching Breakdown:</span>
+                          <span>Match Breakdown:</span>
                           <span className="font-mono text-teal-300">
-                            Spec: {rec.score.specialtyMatchScore}/40 • Bed: {rec.score.bedAvailabilityScore}/30 • Dist: {rec.score.distanceScore}/20 • Read: {rec.score.facilityReadinessScore}/10
+                            Spec: {rec.score.specialtyMatchScore}/40 • Bed: {rec.score.bedAvailabilityScore}/30 • Dist: {rec.score.distanceScore}/20 • Division: {rec.score.facilityReadinessScore}/10
                           </span>
                         </div>
                         {rec.score.reasoning.map((r, i) => (
@@ -650,7 +656,7 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                       {!rec.hasRequiredBed && (
                         <div className="mt-2 p-2 bg-rose-950/60 border border-rose-800 rounded text-rose-300 text-xs flex items-center gap-2">
                           <AlertCircle className="w-4 h-4 shrink-0" />
-                          <span>Warning: Zero {bedType.toUpperCase()} beds vacant at this hospital. Transfer may encounter critical delay.</span>
+                          <span>Warning: Zero {bedType.toUpperCase()} beds vacant at this hospital.</span>
                         </div>
                       )}
                     </div>
@@ -658,7 +664,6 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                 })}
               </div>
 
-              {/* Selected Choice Overview */}
               {chosenRecommendation && (
                 <div className="p-4 bg-teal-950/30 border border-teal-700/60 rounded-xl space-y-2 text-xs">
                   <div className="flex items-center justify-between">
@@ -666,13 +671,10 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                     <span className="font-mono text-emerald-400 font-bold">READY FOR DISPATCH</span>
                   </div>
                   <p className="text-slate-300">
-                    Patient <strong className="text-white">{currentPatient.full_name}</strong> will be immediately dispatched from{' '}
+                    Patient <strong className="text-white">{currentPatient.full_name}</strong> will be dispatched from{' '}
                     <strong className="text-white">{activeDoctor.facility_name}</strong> to{' '}
-                    <strong className="text-teal-300">{chosenRecommendation.hospital.facility_name}</strong> under care of{' '}
+                    <strong className="text-teal-300">{chosenRecommendation.hospital.facility_name}</strong> under care of City Specialist{' '}
                     <strong className="text-white">{chosenRecommendation.assignedDoctor?.full_name || 'Designated Specialist'}</strong>.
-                  </p>
-                  <p className="text-[11px] text-slate-400">
-                    A reservation for 1 <span className="uppercase font-mono text-slate-200">{bedType}</span> bed has been locked in the national registry.
                   </p>
                 </div>
               )}
@@ -696,7 +698,7 @@ export const EmergencyTransferModal: React.FC<EmergencyTransferModalProps> = ({
                 onClick={() => setStep(2)}
                 className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors cursor-pointer"
               >
-                <span>Find Matched Facilities</span>
+                <span>Find Matched City Hospital</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </>

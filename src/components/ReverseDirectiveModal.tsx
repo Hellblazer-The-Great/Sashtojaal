@@ -135,7 +135,7 @@ export const ReverseDirectiveModal: React.FC<ReverseDirectiveModalProps> = ({
     dataService.issueReverseDirective(transfer.id, {
       cityDoctorId: activeDoctor.doctor_id,
       cityDoctorName: activeDoctor.full_name,
-      cityDoctorSpecialty: activeDoctor.specialty || 'Tertiary Specialist',
+      cityDoctorSpecialty: activeDoctor.specialty || 'City Specialist',
       cityFacilityName: transfer.targetHospital.facility_name,
       localDoctorId: transfer.localDoctor.doctor_id,
       localDoctorName: transfer.localDoctor.full_name,
@@ -411,7 +411,7 @@ export const ReverseDirectiveModal: React.FC<ReverseDirectiveModalProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
                 <AlertTriangle className="w-4 h-4 text-rose-400" />
-                <span>4. Red Flag Indicators (Require Immediate Re-Escalation to Tertiary)</span>
+                <span>4. Red Flag Indicators (Require Immediate Re-Escalation to City Hospital)</span>
               </div>
               <button
                 type="button"

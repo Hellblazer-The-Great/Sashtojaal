@@ -9,9 +9,6 @@ import {
   ArrowRight,
   ShieldCheck,
   Stethoscope,
-  Heart,
-  ChevronRight,
-  User,
   ExternalLink
 } from 'lucide-react';
 
@@ -34,31 +31,45 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
   const [filterUrgency, setFilterUrgency] = useState<string>('all');
   const [filterMineOnly, setFilterMineOnly] = useState<boolean>(false);
 
-  // Filter transfers
+  // Filter transfers based on division and doctor persona
   const filteredTransfers = transfers.filter((t) => {
     if (filterUrgency !== 'all' && t.urgency !== filterUrgency) return false;
+
+    // Upazila doctors see cases in their division or their own clinic
+    if (activeDoctor.role === 'upazila_doctor') {
+      if (t.originDivision !== activeDoctor.division && t.localDoctor.doctor_id !== activeDoctor.doctor_id) {
+        return false;
+      }
+    }
+
     if (filterMineOnly) {
       const isMyOrigin = t.localDoctor.doctor_id === activeDoctor.doctor_id;
       const isMyTarget = t.targetDoctor.doctor_id === activeDoctor.doctor_id;
       if (!isMyOrigin && !isMyTarget) return false;
     }
+
     return true;
   });
 
   // Pipeline groups
-  const inTransitCases = filteredTransfers.filter((t) => t.status === 'in_transit' || t.status === 'pending_dispatch');
-  const admittedCases = filteredTransfers.filter((t) => t.status === 'admitted_tertiary' || t.status === 'in_treatment' || t.status === 'treatment_completed');
-  const reverseCareCases = filteredTransfers.filter((t) => t.status === 'referred_back' || t.status === 'recovered_closed');
+  const inTransitCases = filteredTransfers.filter(
+    (t) => t.status === 'in_transit' || t.status === 'pending_dispatch'
+  );
+  const admittedCases = filteredTransfers.filter(
+    (t) => t.status === 'admitted_city_hospital' || t.status === 'in_treatment' || t.status === 'treatment_completed'
+  );
+  const reverseCareCases = filteredTransfers.filter(
+    (t) => t.status === 'referred_back' || t.status === 'recovered_closed'
+  );
 
   const handleAdvanceStatus = (transfer: TransferReferral) => {
     if (transfer.status === 'pending_dispatch') {
       dataService.updateTransferStatus(transfer.id, 'in_transit');
     } else if (transfer.status === 'in_transit') {
-      dataService.updateTransferStatus(transfer.id, 'admitted_tertiary');
-    } else if (transfer.status === 'admitted_tertiary') {
+      dataService.updateTransferStatus(transfer.id, 'admitted_city_hospital');
+    } else if (transfer.status === 'admitted_city_hospital') {
       dataService.updateTransferStatus(transfer.id, 'in_treatment');
     } else if (transfer.status === 'in_treatment') {
-      // Prompt to open reverse directive modal
       onOpenReverseModal(transfer);
     }
   };
@@ -73,11 +84,11 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
               Emergency Referral &amp; Transfer Command Pipeline
             </h2>
             <span className="text-xs bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded border border-slate-700">
-              {filteredTransfers.length} Active Records
+              {filteredTransfers.length} Active Records in {activeDoctor.division}
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1 max-w-2xl">
-            Semi-automated transfer coordination across Bangladesh Upazila Health Complexes and Tertiary Medical Colleges. Real-time GPS transit tracking and beds synchronization.
+            Coordinating rapid ambulance transit from Upazila Health Complexes to designated City Hospitals, followed by post-treatment reverse directives.
           </p>
         </div>
 
@@ -102,7 +113,7 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
               filterUrgency === 'all' ? 'bg-slate-700 text-white font-semibold' : 'bg-slate-900 text-slate-400 hover:text-slate-200'
             }`}
           >
-            All Tiers ({transfers.length})
+            All Tiers ({filteredTransfers.length})
           </button>
           <button
             onClick={() => setFilterUrgency('code_red')}
@@ -111,7 +122,7 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-rose-400"></span>
-            Code Red ({transfers.filter((t) => t.urgency === 'code_red').length})
+            Code Red ({filteredTransfers.filter((t) => t.urgency === 'code_red').length})
           </button>
           <button
             onClick={() => setFilterUrgency('code_amber')}
@@ -120,7 +131,7 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
             }`}
           >
             <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-            Code Amber ({transfers.filter((t) => t.urgency === 'code_amber').length})
+            Code Amber ({filteredTransfers.filter((t) => t.urgency === 'code_amber').length})
           </button>
         </div>
 
@@ -139,7 +150,7 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
 
       {/* 3 Pipeline Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Column 1: In Transit & Emergency Dispatch */}
+        {/* Column 1: In Transit */}
         <div className="space-y-3">
           <div className="bg-slate-900/90 border border-slate-800 px-3.5 py-2.5 rounded-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -148,13 +159,13 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
                 1. Transit &amp; En Route ({inTransitCases.length})
               </h3>
             </div>
-            <span className="text-[10px] text-amber-400 font-mono">Active Road Dispatch</span>
+            <span className="text-[10px] text-amber-400 font-mono">Ambulance Dispatch</span>
           </div>
 
           <div className="space-y-3">
             {inTransitCases.length === 0 ? (
               <div className="p-6 text-center bg-slate-900/40 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
-                No ambulances currently en route.
+                No ambulances currently en route in this jurisdiction.
               </div>
             ) : (
               inTransitCases.map((transfer) => (
@@ -192,7 +203,7 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
                   {/* Transfer Route */}
                   <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 text-xs space-y-1.5">
                     <div className="flex items-center justify-between text-slate-400 text-[11px]">
-                      <span>From: {transfer.originHospitalName.split('(')[0]}</span>
+                      <span>From: {transfer.originHospitalName}</span>
                       <span className="text-teal-400 font-semibold">{transfer.originUpazila}</span>
                     </div>
                     <div className="flex items-center justify-center gap-2 text-slate-600">
@@ -201,12 +212,11 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
                       <div className="h-px bg-slate-800 flex-1"></div>
                     </div>
                     <div className="flex items-center justify-between text-slate-300 text-[11px]">
-                      <span className="font-medium text-white">To: {transfer.targetHospital.facility_name.split('(')[0]}</span>
+                      <span className="font-medium text-white">To: {transfer.targetHospital.facility_name}</span>
                       <span className="text-amber-400 font-mono font-bold">~{transfer.transitEstimatedMinutes}m transit</span>
                     </div>
                   </div>
 
-                  {/* Clinical condition summary */}
                   <p className="text-xs text-slate-300 line-clamp-2">
                     <strong className="text-slate-100">{transfer.patient.current_problem}:</strong> {transfer.clinicalSummary}
                   </p>
@@ -233,12 +243,11 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Status advance action */}
                   <button
                     onClick={() => handleAdvanceStatus(transfer)}
                     className="w-full flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-semibold py-1.5 rounded-lg border border-slate-700 transition-colors cursor-pointer"
                   >
-                    <span>Confirm Arrival &amp; Admit at Tertiary Center</span>
+                    <span>Confirm Arrival &amp; Admit at City Hospital</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -247,22 +256,22 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
           </div>
         </div>
 
-        {/* Column 2: Admitted in Tertiary Hospital & In Treatment */}
+        {/* Column 2: Admitted in City Hospital */}
         <div className="space-y-3">
           <div className="bg-slate-900/90 border border-slate-800 px-3.5 py-2.5 rounded-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Building2 className="w-4 h-4 text-teal-400" />
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                2. Admitted in Tertiary Care ({admittedCases.length})
+                2. Admitted in City Hospital ({admittedCases.length})
               </h3>
             </div>
-            <span className="text-[10px] text-teal-400 font-mono">In OR / Specialized Ward</span>
+            <span className="text-[10px] text-teal-400 font-mono">In Surgery / Ward</span>
           </div>
 
           <div className="space-y-3">
             {admittedCases.length === 0 ? (
               <div className="p-6 text-center bg-slate-900/40 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
-                No patients currently in tertiary surgery or ICU.
+                No patients currently admitted in surgery or critical care.
               </div>
             ) : (
               admittedCases.map((transfer) => (
@@ -291,14 +300,13 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Specialist & Hospital Detail */}
                   <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 text-xs space-y-1">
                     <div className="text-slate-400 text-[11px]">
-                      Tertiary Facility: <span className="text-slate-200 font-medium">{transfer.targetHospital.facility_name.split('(')[0]}</span>
+                      City Hospital: <span className="text-slate-200 font-medium">{transfer.targetHospital.facility_name}</span>
                     </div>
                     <div className="text-slate-400 text-[11px] flex items-center gap-1.5">
                       <Stethoscope className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                      <span>Treating Specialist:</span>
+                      <span>Treating City Specialist:</span>
                       <span className="text-teal-300 font-semibold">{transfer.targetDoctor.full_name}</span>
                     </div>
                   </div>
@@ -307,7 +315,6 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
                     <strong className="text-slate-100">Intervention:</strong> {transfer.clinicalSummary}
                   </p>
 
-                  {/* Key Action: Issue Reverse Directive once surgery is finished */}
                   <div className="pt-1">
                     <button
                       onClick={() => onOpenReverseModal(transfer)}
@@ -317,7 +324,7 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
                       <span>Issue Reverse Referral Directive (Send Home)</span>
                     </button>
                     <p className="text-[10px] text-slate-400 text-center mt-1">
-                      Enables patient to recover locally at Upazila Health Complex.
+                      Hands care back to Upazila Doctor for home observation.
                     </p>
                   </div>
                 </div>
@@ -326,7 +333,7 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
           </div>
         </div>
 
-        {/* Column 3: Reverse Referral Active & Recovering at Home */}
+        {/* Column 3: Monitored Home Recovery */}
         <div className="space-y-3">
           <div className="bg-slate-900/90 border border-slate-800 px-3.5 py-2.5 rounded-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -335,7 +342,7 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
                 3. Monitored Home Recovery ({reverseCareCases.length})
               </h3>
             </div>
-            <span className="text-[10px] text-emerald-400 font-mono">Local Upazila Protocol</span>
+            <span className="text-[10px] text-emerald-400 font-mono">Upazila Doctor Supervision</span>
           </div>
 
           <div className="space-y-3">
@@ -364,7 +371,7 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
                         </div>
                         <h4 className="text-sm font-bold text-white mt-1">{transfer.patient.full_name}</h4>
                         <p className="text-xs text-slate-400">
-                          {transfer.patient.age_years}y • Local Clinic: {transfer.originHospitalName.split('(')[0]}
+                          {transfer.patient.age_years}y • Clinic: {transfer.originHospitalName}
                         </p>
                       </div>
 
@@ -376,20 +383,18 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
                       </div>
                     </div>
 
-                    {/* Procedure diagnosis */}
                     {directive && (
                       <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 text-xs space-y-1">
                         <div className="text-slate-300 font-medium">
                           {directive.dischargeDiagnosis}
                         </div>
                         <div className="text-[11px] text-slate-400">
-                          Consultant: <span className="text-slate-200">{directive.cityDoctorName}</span> • Directives:{' '}
-                          <span className="text-teal-300">{directive.medications.length} meds prescribed</span>
+                          City Specialist: <span className="text-slate-200">{directive.cityDoctorName}</span> • Directives:{' '}
+                          <span className="text-teal-300">{directive.medications.length} meds</span>
                         </div>
                       </div>
                     )}
 
-                    {/* Progress bar */}
                     <div className="space-y-1">
                       <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
                         <div
@@ -403,7 +408,6 @@ export const TransferPipelineView: React.FC<TransferPipelineViewProps> = ({
                       </div>
                     </div>
 
-                    {/* Open Case Workspace Button */}
                     <button
                       onClick={() => onSelectReverseCareCase(transfer.id)}
                       className="w-full flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-semibold py-2 rounded-lg border border-slate-700 transition-colors cursor-pointer"

@@ -1,4 +1,4 @@
-export type DoctorRole = 'local_doctor' | 'capital_specialist';
+export type DoctorRole = 'upazila_doctor' | 'city_specialist';
 
 export interface Doctor {
   doctor_id: string;
@@ -8,15 +8,17 @@ export interface Doctor {
   full_name: string;
   role: DoctorRole;
   facility_name: string;
+  division: string; // Bangladesh Division
   district: string;
   upazila: string | null;
-  service_area: string;
+  service_area: 'upazila' | 'city_hospital';
   specialty: string;
   qualification: string;
   registration_number: string;
   contact: string;
   availability: string;
   is_active: boolean;
+  pin?: string;
 }
 
 export interface BedCapacity {
@@ -33,7 +35,7 @@ export interface HospitalCapacity {
 
 export interface HospitalLocation {
   country: string;
-  division: string | null;
+  division: string;
   district: string;
   upazila: string | null;
   address: string;
@@ -42,11 +44,11 @@ export interface HospitalLocation {
 export interface Hospital {
   hospital_id: string;
   facility_name: string;
-  facility_type: 'upazila_health_complex' | 'government_city_hospital';
+  facility_type: 'city_hospital' | 'upazila_health_complex';
   ownership: string;
   is_synthetic_record: boolean;
   location: HospitalLocation;
-  service_level: 'upazila' | 'district_or_city_referral';
+  service_level: 'city_hospital' | 'upazila';
   departments: string[];
   specialties_available: string[];
   capacity: HospitalCapacity;
@@ -73,6 +75,7 @@ export interface Patient {
   height_cm: number;
   weight_kg: number;
   blood_group: string;
+  division: string; // Bangladesh Division
   district: string;
   upazila: string;
   current_problem: string;
@@ -97,7 +100,7 @@ export type TransferUrgency = 'code_red' | 'code_amber' | 'code_yellow';
 export type TransferStatus =
   | 'pending_dispatch'
   | 'in_transit'
-  | 'admitted_tertiary'
+  | 'admitted_city_hospital'
   | 'in_treatment'
   | 'treatment_completed'
   | 'referred_back'
@@ -193,6 +196,7 @@ export interface TransferReferral {
   patient: Patient;
   localDoctor: Doctor;
   originHospitalName: string;
+  originDivision: string;
   originDistrict: string;
   originUpazila: string;
   targetHospital: Hospital;

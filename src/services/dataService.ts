@@ -1,46 +1,354 @@
 import { Doctor, Hospital, Patient, TransferReferral, ReverseReferralDirective, DoctorChatMessage, FollowUpMilestone } from '../types/index.ts';
+import { getDivisionForDistrict } from '../utils/transferLogic.ts';
 
 const STORAGE_KEYS = {
-  TRANSFERS: 'sasthojaal_transfers_v1',
-  HOSPITALS_STATE: 'sasthojaal_hospitals_state_v1',
-  ACTIVE_DOCTOR: 'sasthojaal_active_doctor_v1'
+  TRANSFERS: 'sasthojaal_transfers_v2',
+  HOSPITALS_STATE: 'sasthojaal_hospitals_state_v2',
+  AUTH_DOCTOR_ID: 'sasthojaal_auth_doctor_id_v2'
 };
 
-// Initial Seed Referrals to demonstrate all life-cycle states immediately
-function createSeedReferrals(doctors: Doctor[], hospitals: Hospital[], patients: Patient[]): TransferReferral[] {
-  const localDoc1 = doctors.find((d) => d.doctor_id === 'SHJ-D-L-001') || doctors[0]; // Dr. Nabila Khan (Dumuria UHC, Khulna)
-  const localDoc2 = doctors.find((d) => d.doctor_id === 'SHJ-D-L-002') || doctors[1]; // Dr. Sumaiya Das (Dighalia UHC)
-  const cityDoc1 = doctors.find((d) => d.doctor_id === 'SHJ-D-C-002') || doctors[doctors.length - 2]; // Dr. Nabila Das (Cardiology)
-  const cityDoc2 = doctors.find((d) => d.doctor_id === 'SHJ-D-C-001') || doctors[doctors.length - 1]; // Dr. Sharmeen Talukder (Internal Med)
-  const cityDoc3 = doctors.find((d) => d.doctor_id === 'SHJ-D-C-003') || doctors[doctors.length - 3]; // Dr. Nayeem Akter (Neurology)
+// 5 Dedicated City Hospitals across different Bangladesh districts
+export const FIVE_CITY_HOSPITALS: Hospital[] = [
+  {
+    hospital_id: 'SHJ-HOSP-KMCH',
+    facility_name: 'Khulna Medical College Hospital',
+    facility_type: 'city_hospital',
+    ownership: 'government',
+    is_synthetic_record: true,
+    location: {
+      country: 'Bangladesh',
+      division: 'Khulna Division',
+      district: 'Khulna',
+      upazila: null,
+      address: 'Boyra, Khulna - 9000'
+    },
+    service_level: 'city_hospital',
+    departments: ['General Surgery', 'Medicine', 'Cardiology', 'Orthopaedics', 'Emergency', 'ICU', 'HDU'],
+    specialties_available: ['General Surgery', 'Laparoscopic Surgery', 'Cardiology', 'Gastroenterology'],
+    capacity: {
+      general_beds: { total: 500, occupied: 432, available: 68 },
+      icu_beds: { total: 10, occupied: 7, available: 3 },
+      hdu_beds: { total: 10, occupied: 6, available: 4 }
+    },
+    services: ['emergency', 'surgery', 'inpatient', 'diagnostics'],
+    referral_capabilities: ['upazila_health_complex'],
+    contact: { phone: '041-760350', email: 'director@kmch.gov.bd' },
+    operational_status: 'operational',
+    last_capacity_update: new Date().toISOString()
+  },
+  {
+    hospital_id: 'SHJ-HOSP-DMCH',
+    facility_name: 'Dhaka Medical College Hospital',
+    facility_type: 'city_hospital',
+    ownership: 'government',
+    is_synthetic_record: true,
+    location: {
+      country: 'Bangladesh',
+      division: 'Dhaka Division',
+      district: 'Dhaka',
+      upazila: null,
+      address: 'Secretariat Road, Ramna, Dhaka - 1000'
+    },
+    service_level: 'city_hospital',
+    departments: ['Cardiology', 'Neurosurgery', 'General Surgery', 'Medicine', 'Emergency', 'CCU', 'ICU'],
+    specialties_available: ['Cardiology', 'Interventional Cardiology', 'Neurosurgery', 'Critical Care'],
+    capacity: {
+      general_beds: { total: 800, occupied: 710, available: 90 },
+      icu_beds: { total: 16, occupied: 12, available: 4 },
+      hdu_beds: { total: 14, occupied: 9, available: 5 }
+    },
+    services: ['emergency', 'surgery', 'inpatient', 'cath_lab'],
+    referral_capabilities: ['upazila_health_complex'],
+    contact: { phone: '02-55165088', email: 'director@dmch.gov.bd' },
+    operational_status: 'operational',
+    last_capacity_update: new Date().toISOString()
+  },
+  {
+    hospital_id: 'SHJ-HOSP-JASH',
+    facility_name: 'Jashore 250 Bed General Hospital',
+    facility_type: 'city_hospital',
+    ownership: 'government',
+    is_synthetic_record: true,
+    location: {
+      country: 'Bangladesh',
+      division: 'Khulna Division',
+      district: 'Jashore',
+      upazila: null,
+      address: 'Hospital Road, Jashore Sadar, Jashore'
+    },
+    service_level: 'city_hospital',
+    departments: ['Orthopaedics', 'General Surgery', 'Medicine', 'Paediatrics', 'Emergency', 'ICU'],
+    specialties_available: ['Orthopaedics', 'Trauma Surgery', 'General Surgery', 'Emergency Care'],
+    capacity: {
+      general_beds: { total: 250, occupied: 215, available: 35 },
+      icu_beds: { total: 8, occupied: 6, available: 2 },
+      hdu_beds: { total: 6, occupied: 4, available: 2 }
+    },
+    services: ['emergency', 'surgery', 'inpatient'],
+    referral_capabilities: ['upazila_health_complex'],
+    contact: { phone: '0421-68520', email: 'ms@jashore250bed.gov.bd' },
+    operational_status: 'operational',
+    last_capacity_update: new Date().toISOString()
+  },
+  {
+    hospital_id: 'SHJ-HOSP-CMCH',
+    facility_name: 'Chattogram Medical College Hospital',
+    facility_type: 'city_hospital',
+    ownership: 'government',
+    is_synthetic_record: true,
+    location: {
+      country: 'Bangladesh',
+      division: 'Chattogram Division',
+      district: 'Chattogram',
+      upazila: null,
+      address: 'KB Fazlul Kader Road, Panchlaish, Chattogram'
+    },
+    service_level: 'city_hospital',
+    departments: ['Neurology', 'Neurosurgery', 'Cardiology', 'General Surgery', 'ICU', 'HDU'],
+    specialties_available: ['Neurology', 'Neurosurgery', 'Stroke Care', 'Cardiology'],
+    capacity: {
+      general_beds: { total: 600, occupied: 520, available: 80 },
+      icu_beds: { total: 12, occupied: 9, available: 3 },
+      hdu_beds: { total: 10, occupied: 7, available: 3 }
+    },
+    services: ['emergency', 'surgery', 'inpatient', 'neuro_diagnostics'],
+    referral_capabilities: ['upazila_health_complex'],
+    contact: { phone: '031-619400', email: 'director@cmch.gov.bd' },
+    operational_status: 'operational',
+    last_capacity_update: new Date().toISOString()
+  },
+  {
+    hospital_id: 'SHJ-HOSP-RMCH',
+    facility_name: 'Rajshahi Medical College Hospital',
+    facility_type: 'city_hospital',
+    ownership: 'government',
+    is_synthetic_record: true,
+    location: {
+      country: 'Bangladesh',
+      division: 'Rajshahi Division',
+      district: 'Rajshahi',
+      upazila: null,
+      address: 'Laxmipur, Rajshahi - 6000'
+    },
+    service_level: 'city_hospital',
+    departments: ['Internal Medicine', 'Nephrology', 'Critical Care', 'General Surgery', 'ICU', 'HDU'],
+    specialties_available: ['Internal Medicine', 'Critical Care', 'Nephrology', 'Dialysis'],
+    capacity: {
+      general_beds: { total: 550, occupied: 470, available: 80 },
+      icu_beds: { total: 10, occupied: 7, available: 3 },
+      hdu_beds: { total: 8, occupied: 5, available: 3 }
+    },
+    services: ['emergency', 'surgery', 'inpatient', 'dialysis'],
+    referral_capabilities: ['upazila_health_complex'],
+    contact: { phone: '0721-772150', email: 'director@rmch.gov.bd' },
+    operational_status: 'operational',
+    last_capacity_update: new Date().toISOString()
+  }
+];
 
-  const hospKhulnaMed = hospitals.find((h) => h.facility_name.includes('Khulna') || h.hospital_id === 'SHJ-H-C-001') || hospitals[hospitals.length - 4];
-  const hospAbuNaser = hospitals.find((h) => h.facility_name.includes('Abu Naser') || h.hospital_id === 'SHJ-H-C-003') || hospitals[hospitals.length - 3];
-  const hospDMCH = hospitals.find((h) => h.facility_name.includes('Dhaka Medical') || h.hospital_id === 'SHJ-H-C-004') || hospitals[hospitals.length - 2];
-
-  const p1 = patients[0] || {
-    patient_id: 'SHJ-P-000001',
-    identity_type: 'SASTHOJAL_TEST_ID',
-    identity_number: 'TEST-P-000001',
+// Exact Doctor Roster: 5 City Specialists (1 per city hospital) + 4 Nearby Upazila Local Doctors
+export const REGISTERED_DOCTORS: Doctor[] = [
+  // 5 City Specialists
+  {
+    doctor_id: 'DOC-SPEC-01',
+    identity_type: 'BMDC_REGISTRATION_ID',
+    identity_number: 'BMDC-A-41290',
     is_synthetic: true,
-    full_name: 'Sabbir Chowdhury',
-    date_of_birth: '1961-10-04',
-    age_years: 65,
-    sex: 'Male',
-    height_cm: 172,
-    weight_kg: 74,
-    blood_group: 'O+',
+    full_name: 'Dr. Sharmeen Akhter',
+    role: 'city_specialist',
+    facility_name: 'Khulna Medical College Hospital',
+    division: 'Khulna Division',
+    district: 'Khulna',
+    upazila: null,
+    service_area: 'city_hospital',
+    specialty: 'General & Laparoscopic Surgery',
+    qualification: 'MBBS, FCPS (Surgery)',
+    registration_number: 'BMDC-A-41290',
+    contact: '01711-412900',
+    availability: '24/7 On-Call Emergency & OT',
+    is_active: true,
+    pin: '1234'
+  },
+  {
+    doctor_id: 'DOC-SPEC-02',
+    identity_type: 'BMDC_REGISTRATION_ID',
+    identity_number: 'BMDC-A-32851',
+    is_synthetic: true,
+    full_name: 'Dr. Kazi Mahfuzur Rahman',
+    role: 'city_specialist',
+    facility_name: 'Dhaka Medical College Hospital',
+    division: 'Dhaka Division',
+    district: 'Dhaka',
+    upazila: null,
+    service_area: 'city_hospital',
+    specialty: 'Cardiology & CCU',
+    qualification: 'MBBS, MD, FCPS (Cardiology)',
+    registration_number: 'BMDC-A-32851',
+    contact: '01819-328510',
+    availability: '24/7 Emergency Cath Lab',
+    is_active: true,
+    pin: '1234'
+  },
+  {
+    doctor_id: 'DOC-SPEC-03',
+    identity_type: 'BMDC_REGISTRATION_ID',
+    identity_number: 'BMDC-A-54910',
+    is_synthetic: true,
+    full_name: 'Dr. Md. Tariqul Islam',
+    role: 'city_specialist',
+    facility_name: 'Jashore 250 Bed General Hospital',
+    division: 'Khulna Division',
+    district: 'Jashore',
+    upazila: null,
+    service_area: 'city_hospital',
+    specialty: 'Orthopaedics & Trauma Surgery',
+    qualification: 'MBBS, MS (Orthopaedics)',
+    registration_number: 'BMDC-A-54910',
+    contact: '01914-549100',
+    availability: 'Emergency Trauma Wing',
+    is_active: true,
+    pin: '1234'
+  },
+  {
+    doctor_id: 'DOC-SPEC-04',
+    identity_type: 'BMDC_REGISTRATION_ID',
+    identity_number: 'BMDC-A-62184',
+    is_synthetic: true,
+    full_name: 'Dr. Nusrat Jahan Chowdhury',
+    role: 'city_specialist',
+    facility_name: 'Chattogram Medical College Hospital',
+    division: 'Chattogram Division',
+    district: 'Chattogram',
+    upazila: null,
+    service_area: 'city_hospital',
+    specialty: 'Neurology & Neuro-Critical Care',
+    qualification: 'MBBS, FCPS (Neurology)',
+    registration_number: 'BMDC-A-62184',
+    contact: '01713-621840',
+    availability: 'Stroke & Neuro-ICU Unit',
+    is_active: true,
+    pin: '1234'
+  },
+  {
+    doctor_id: 'DOC-SPEC-05',
+    identity_type: 'BMDC_REGISTRATION_ID',
+    identity_number: 'BMDC-A-49273',
+    is_synthetic: true,
+    full_name: 'Dr. Mostafa Kamal',
+    role: 'city_specialist',
+    facility_name: 'Rajshahi Medical College Hospital',
+    division: 'Rajshahi Division',
+    district: 'Rajshahi',
+    upazila: null,
+    service_area: 'city_hospital',
+    specialty: 'Internal & Critical Care Medicine',
+    qualification: 'MBBS, MD (Internal Medicine)',
+    registration_number: 'BMDC-A-49273',
+    contact: '01712-492730',
+    availability: 'Medical ICU & HDU',
+    is_active: true,
+    pin: '1234'
+  },
+
+  // 4 Nearby Upazila Local Doctors (3 in Khulna Division nearby each other + 1 in Dhaka Division)
+  {
+    doctor_id: 'DOC-UPZ-01',
+    identity_type: 'BMDC_REGISTRATION_ID',
+    identity_number: 'BMDC-A-78214',
+    is_synthetic: true,
+    full_name: 'Dr. Nabila Khan',
+    role: 'upazila_doctor',
+    facility_name: 'Dumuria Upazila Health Complex',
+    division: 'Khulna Division',
     district: 'Khulna',
     upazila: 'Dumuria',
-    current_problem: 'Acute Inferior STEMI & cardiogenic shock',
-    problem_description: 'Sudden severe crushing retrosternal chest pain with diaphoresis, hypotension (BP 85/50), ST elevations in II, III, aVF.',
-    symptom_duration: '90 minutes',
-    known_allergies: 'Penicillin',
-    chronic_conditions: ['Hypertension', 'Type 2 Diabetes'],
-    last_checkup_date: '2026-04-13'
-  };
+    service_area: 'upazila',
+    specialty: 'General Medicine & Emergency Care',
+    qualification: 'MBBS, BCS (Health)',
+    registration_number: 'BMDC-A-78214',
+    contact: '01715-782140',
+    availability: 'Sat–Thu 08:30–14:30',
+    is_active: true,
+    pin: '1234'
+  },
+  {
+    doctor_id: 'DOC-UPZ-02',
+    identity_type: 'BMDC_REGISTRATION_ID',
+    identity_number: 'BMDC-A-81042',
+    is_synthetic: true,
+    full_name: 'Dr. Tanvir Hossain',
+    role: 'upazila_doctor',
+    facility_name: 'Dighalia Upazila Health Complex',
+    division: 'Khulna Division',
+    district: 'Khulna',
+    upazila: 'Dighalia',
+    service_area: 'upazila',
+    specialty: 'General Medicine & Family Health',
+    qualification: 'MBBS, BCS (Health)',
+    registration_number: 'BMDC-A-81042',
+    contact: '01716-810420',
+    availability: 'Sat–Thu 08:30–14:30',
+    is_active: true,
+    pin: '1234'
+  },
+  {
+    doctor_id: 'DOC-UPZ-03',
+    identity_type: 'BMDC_REGISTRATION_ID',
+    identity_number: 'BMDC-A-85319',
+    is_synthetic: true,
+    full_name: 'Dr. Farhana Yasmin',
+    role: 'upazila_doctor',
+    facility_name: 'Phultala Upazila Health Complex',
+    division: 'Khulna Division',
+    district: 'Khulna',
+    upazila: 'Phultala',
+    service_area: 'upazila',
+    specialty: 'General Medicine & Maternal Care',
+    qualification: 'MBBS, BCS (Health)',
+    registration_number: 'BMDC-A-85319',
+    contact: '01718-853190',
+    availability: 'Sat–Thu 08:30–14:30',
+    is_active: true,
+    pin: '1234'
+  },
+  {
+    doctor_id: 'DOC-UPZ-04',
+    identity_type: 'BMDC_REGISTRATION_ID',
+    identity_number: 'BMDC-A-72491',
+    is_synthetic: true,
+    full_name: 'Dr. Sajjad Ahmed',
+    role: 'upazila_doctor',
+    facility_name: 'Savar Upazila Health Complex',
+    division: 'Dhaka Division',
+    district: 'Dhaka',
+    upazila: 'Savar',
+    service_area: 'upazila',
+    specialty: 'General Medicine & Emergency Triage',
+    qualification: 'MBBS, BCS (Health)',
+    registration_number: 'BMDC-A-72491',
+    contact: '01817-724910',
+    availability: 'Sat–Thu 08:30–14:30',
+    is_active: true,
+    pin: '1234'
+  }
+];
 
-  const p2 = patients[1] || {
+// Initial seed referrals establishing clear case histories between the Upazila Doctor and City Specialist
+function createSeedReferrals(doctors: Doctor[], hospitals: Hospital[], patients: Patient[]): TransferReferral[] {
+  const upzDocNabila = doctors.find((d) => d.doctor_id === 'DOC-UPZ-01')!;
+  const upzDocTanvir = doctors.find((d) => d.doctor_id === 'DOC-UPZ-02')!;
+  const upzDocSajjad = doctors.find((d) => d.doctor_id === 'DOC-UPZ-04')!;
+
+  const specSharmeen = doctors.find((d) => d.doctor_id === 'DOC-SPEC-01')!; // Khulna Medical College
+  const specMahfuzur = doctors.find((d) => d.doctor_id === 'DOC-SPEC-02')!; // Dhaka Medical College
+  const specTariqul = doctors.find((d) => d.doctor_id === 'DOC-SPEC-03')!; // Jashore 250 Bed
+
+  const hospKMCH = hospitals.find((h) => h.hospital_id === 'SHJ-HOSP-KMCH')!;
+  const hospDMCH = hospitals.find((h) => h.hospital_id === 'SHJ-HOSP-DMCH')!;
+  const hospJASH = hospitals.find((h) => h.hospital_id === 'SHJ-HOSP-JASH')!;
+
+  // Patient 1: In Khulna Division (Dumuria) - Managed by Dr. Nabila Khan & Dr. Sharmeen Akhter
+  const p1: Patient = {
     patient_id: 'SHJ-P-000002',
     identity_type: 'SASTHOJAL_TEST_ID',
     identity_number: 'TEST-P-000002',
@@ -52,148 +360,76 @@ function createSeedReferrals(doctors: Doctor[], hospitals: Hospital[], patients:
     height_cm: 156,
     weight_kg: 62,
     blood_group: 'A-',
+    division: 'Khulna Division',
     district: 'Khulna',
     upazila: 'Dumuria',
-    current_problem: 'Complicated Cholelithiasis with acute suppurative perforation',
-    problem_description: 'Underwent emergency open subtotal cholecystectomy and peritoneal washout at tertiary center. Discharged with abdominal drain and subcostal surgical suture line.',
+    current_problem: 'Complicated acute cholecystitis with gallbladder perforation',
+    problem_description: 'Emergency open subtotal cholecystectomy + Morrison pouch drain insertion performed at Khulna Medical College Hospital. Discharged for home recovery under Dumuria Upazila Health Complex supervision.',
     symptom_duration: '4 days',
     known_allergies: 'None recorded',
     chronic_conditions: ['Hypothyroidism'],
     last_checkup_date: '2026-04-10'
   };
 
-  const p3 = patients[2] || {
-    patient_id: 'SHJ-P-000003',
-    identity_type: 'SASTHOJAL_TEST_ID',
-    identity_number: 'TEST-P-000003',
-    is_synthetic: true,
-    full_name: 'Anisur Rahman',
-    date_of_birth: '1975-06-12',
-    age_years: 51,
-    sex: 'Male',
-    height_cm: 168,
-    weight_kg: 68,
-    blood_group: 'B+',
-    district: 'Khulna',
-    upazila: 'Koyra',
-    current_problem: 'Severe Polytrauma with epidural hemorrhage (EDH)',
-    problem_description: 'Motorcycle crash with right temporal skull fracture and deteriorating GCS (8/15). Requires urgent neurosurgical craniotomy and ICU ventilation.',
-    symptom_duration: '3 hours',
-    known_allergies: 'None',
-    chronic_conditions: ['None'],
-    last_checkup_date: '2026-05-02'
-  };
-
-  const p4 = patients[3] || {
-    patient_id: 'SHJ-P-000004',
-    identity_type: 'SASTHOJAL_TEST_ID',
-    identity_number: 'TEST-P-000004',
-    is_synthetic: true,
-    full_name: 'Fatema Khatun',
-    date_of_birth: '1984-11-20',
-    age_years: 42,
-    sex: 'Female',
-    height_cm: 152,
-    weight_kg: 58,
-    blood_group: 'AB+',
-    district: 'Khulna',
-    upazila: 'Dacope',
-    current_problem: 'Acute Respiratory Distress Syndrome (ARDS) secondary to severe pneumonia',
-    problem_description: 'SpO2 84% on room air, high fever (103F), bilateral crepitations. Non-responsive to primary nebulization and IV Ceftriaxone.',
-    symptom_duration: '24 hours',
-    known_allergies: 'Sulfa drugs',
-    chronic_conditions: ['Bronchial Asthma'],
-    last_checkup_date: '2026-04-25'
-  };
-
-  // Seed 1: Active in Transit
-  const referral1: TransferReferral = {
-    id: 'DGHS-REF-2026-9104',
-    patient: p1,
-    localDoctor: localDoc1,
-    originHospitalName: localDoc1.facility_name,
-    originDistrict: 'Khulna',
-    originUpazila: 'Dumuria',
-    targetHospital: hospAbuNaser,
-    targetDoctor: cityDoc1,
-    urgency: 'code_red',
-    requiredBedType: 'icu',
-    clinicalSummary: 'Acute Inferior STEMI with hemodynamic collapse. IV inotropes started, oxygen delivered at 6 L/min via mask. Emergency Cath Lab & ICU admission needed.',
-    initialVitals: {
-      bp: '85/50',
-      heartRate: 112,
-      spo2: 89,
-      temp: 98.4,
-      gcs: 14
-    },
-    recommendedScore: 94,
-    createdAt: new Date(Date.now() - 42 * 60 * 1000).toISOString(),
-    transitStartedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    status: 'in_transit',
-    ambulanceId: 'GOV-AMB-KHU-042',
-    transitEstimatedMinutes: 45
-  };
-
-  // Seed 2: Post-Treatment Reverse Referral Directive Issued (The Heart of the App!)
-  const directiveSeed: ReverseReferralDirective = {
+  // Directive issued by Dr. Sharmeen Akhter to Dr. Nabila Khan
+  const directive1: ReverseReferralDirective = {
     id: 'DGHS-REV-2026-4011',
     referralId: 'DGHS-REF-2026-8842',
     issuedAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
-    cityDoctorId: cityDoc2.doctor_id,
-    cityDoctorName: cityDoc2.full_name,
-    cityDoctorSpecialty: 'General & Hepatobiliary Surgery',
-    cityFacilityName: hospKhulnaMed.facility_name,
-    localDoctorId: localDoc1.doctor_id,
-    localDoctorName: localDoc1.full_name,
-    localFacilityName: localDoc1.facility_name,
-    procedureSummary: 'Emergency open subtotal cholecystectomy + subhepatic closed suction Blake drain insertion for gangrenous ruptured cholecystitis.',
-    operativeNotes: 'Extensive subhepatic adhesions dissected. Cystic duct stump secured with 2-0 silk. Peritoneal cavity lavaged with 2L warm normal saline. Drain placed in Morrison pouch.',
-    dischargeDiagnosis: 'Post-operative Day 4: Acute gangrenous cholecystitis status post-cholecystectomy; hemodynamically stable, afebrile, tolerating soft bland diet.',
+    cityDoctorId: specSharmeen.doctor_id,
+    cityDoctorName: specSharmeen.full_name,
+    cityDoctorSpecialty: specSharmeen.specialty,
+    cityFacilityName: hospKMCH.facility_name,
+    localDoctorId: upzDocNabila.doctor_id,
+    localDoctorName: upzDocNabila.full_name,
+    localFacilityName: upzDocNabila.facility_name,
+    procedureSummary: 'Open subtotal cholecystectomy with peritoneal lavage and closed suction Blake drain insertion.',
+    operativeNotes: 'Extensive subhepatic adhesions dissected. Gallbladder wall gangrenous at fundus. Cystic duct stump secured. 1.5L normal saline lavage. Blake drain placed in Morrison pouch.',
+    dischargeDiagnosis: 'Post-operative Day 4: Acute gangrenous cholecystitis s/p subtotal cholecystectomy. Hemodynamically stable, afebrile, tolerating oral diet.',
     patientConditionAtDischarge: 'Stable',
     medications: [
       {
         name: 'Tab. Cefuroxime Axetil 500mg',
         dosage: '1 tablet twice daily',
         frequency: '12-hourly after meals',
-        duration: '5 more days (complete 7-day course)',
-        instructions: 'Do not miss doses. Monitor for loose stools or rash.'
+        duration: '5 more days',
+        instructions: 'Complete prescribed course. Monitor for diarrhea.'
       },
       {
         name: 'Tab. Paracetamol 500mg',
         dosage: '1-2 tablets',
-        frequency: 'Every 8 hours as needed for surgical pain',
-        duration: '7 days',
-        instructions: 'Max 4 grams in 24 hours. Avoid combining with other acetaminophen products.'
+        frequency: '8-hourly as needed',
+        duration: '5 days',
+        instructions: 'For surgical site pain. Max 4g daily.'
       },
       {
         name: 'Cap. Esomeprazole 20mg',
-        dosage: '1 capsule daily',
-        frequency: 'Morning 30 min before breakfast',
+        dosage: '1 capsule',
+        frequency: 'Once daily before breakfast',
         duration: '14 days',
         instructions: 'Gastroprotection.'
       }
     ],
     localCareDirectives: {
-      woundCare: 'Keep subcostal dressing clean and dry. Inspect incision for redness, swelling, or purulent exudate every 48 hours. Clean with Povidone-Iodine solution and apply sterile gauze.',
-      drainManagement: 'Measure Blake drain output every 24 hours in the Upazila clinic. If 24h serosanguinous output is <25ml for 2 consecutive days, local doctor is authorized to remove the drain.',
-      sutureRemovalDate: 'Post-op Day 10 (3 days from today). Remove alternate staples first.',
-      dietaryInstructions: 'Low-fat, high-protein soft diet. Avoid ghee, mustard oil, and deep-fried local sweets. Plenty of warm fluids.',
-      activityMobility: 'Encourage gentle ambulation inside the house. No heavy lifting (>5 kg) or agricultural field work for 6 weeks.'
+      woundCare: 'Keep subcostal surgical dressing clean and dry. Inspect every 48 hours at Dumuria Upazila Health Complex. Clean with Povidone-Iodine solution and re-apply sterile gauze.',
+      drainManagement: 'Check Blake drain collection daily. If 24h serosanguinous output is <20ml for 2 consecutive days, Upazila Doctor is authorized to pull drain.',
+      sutureRemovalDate: 'Post-op Day 10 (approx. 4 days from today). Remove alternate staples first.',
+      dietaryInstructions: 'Low-fat, high-protein soft diet. Avoid ghee and fried items. Plenty of fluids.',
+      activityMobility: 'Gentle indoor walking encouraged. Strictly no heavy lifting (>5 kg) or agricultural field work for 6 weeks.'
     },
     redFlagWarnings: [
-      'High-grade fever (>101°F) accompanied by chills or rigors',
-      'Sudden increase in abdominal pain with distension or rebound tenderness',
-      'Sudden surge in drain output containing fresh bright red blood (>100ml/hr) or frank bile',
-      'Wound gaping or dehiscence with bowel loops visible',
-      'Persistent vomiting or inability to tolerate oral fluids'
+      'High-grade fever (>101°F) with chills or shaking rigors',
+      'Sudden surge in abdominal pain with distension or rigidity',
+      'Sudden drain output with fresh blood (>100ml/hr) or frank bile',
+      'Wound edge gaping or purulent foul-smelling discharge'
     ],
     scheduledMilestones: [
       {
         dayLabel: 'Day 3 Post-Discharge (Clinic Inspection)',
         scheduledDate: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-        recommendedChecks: ['Incision site inspection', 'Drain output quantification', 'Vitals check (BP, SpO2, Temp)'],
+        recommendedChecks: ['Incision site inspection', 'Drain output quantification', 'Vital signs audit (BP, Pulse, SpO2)'],
         completed: true,
-        completedAt: new Date(Date.now() - 22 * 3600 * 1000).toISOString(),
+        completedAt: new Date(Date.now() - 20 * 3600 * 1000).toISOString(),
         doctorNotes: 'Patient visited Dumuria UHC accompanied by daughter. Afebrile (98.6F), BP 120/75. Drain output 15ml serosanguinous. Wound clean, minimal erythema.',
         recordedVitals: {
           bpSystolic: 120,
@@ -213,61 +449,63 @@ function createSeedReferrals(doctors: Doctor[], hospitals: Hospital[], patients:
       {
         dayLabel: 'Day 10 Post-Discharge (Suture / Staple Removal)',
         scheduledDate: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString(),
-        recommendedChecks: ['Remove alternate sutures/staples', 'Assessment of fascial healing', 'LFT liver enzymes review if requested'],
+        recommendedChecks: ['Removal of skin staples', 'Fascial healing review', 'Liver function test review'],
         completed: false
       },
       {
         dayLabel: 'Day 30 (Final Long-Term Recovery Audit)',
         scheduledDate: new Date(Date.now() + 25 * 24 * 3600 * 1000).toISOString(),
-        recommendedChecks: ['Abdominal wall integrity check (incisional hernia rule out)', 'Dietary normalisation check', 'Discharge from active follow-up registry'],
+        recommendedChecks: ['Incisional integrity audit', 'Dietary normalization check', 'Discharge from active follow-up'],
         completed: false
       }
     ],
+    // PRIVATE CHAT: ONLY Dr. Nabila Khan (Upazila Doctor) and Dr. Sharmeen Akhter (City Specialist) can see this!
     chatMessages: [
       {
         id: 'msg-01',
-        senderDoctorId: cityDoc2.doctor_id,
-        senderName: cityDoc2.full_name,
-        senderRole: 'capital_specialist',
-        senderFacility: hospKhulnaMed.facility_name,
+        senderDoctorId: specSharmeen.doctor_id,
+        senderName: specSharmeen.full_name,
+        senderRole: 'city_specialist',
+        senderFacility: hospKMCH.facility_name,
         timestamp: new Date(Date.now() - 47 * 3600 * 1000).toISOString(),
-        content: 'Dr. Nabila, patient Sohana Chowdhury was discharged today in stable condition. We successfully controlled the acute biliary sepsis. The patient is very relieved to recover at her village home in Dumuria. Please inspect her Blake drain output over the next 48 hours.'
+        content: 'Dr. Nabila, patient Sohana Chowdhury was discharged in stable condition today. We controlled the acute biliary sepsis. The patient is very glad she can recover at her village home in Dumuria instead of staying in Khulna city. Please monitor her drain output.'
       },
       {
         id: 'msg-02',
-        senderDoctorId: localDoc1.doctor_id,
-        senderName: localDoc1.full_name,
-        senderRole: 'local_doctor',
-        senderFacility: localDoc1.facility_name,
-        timestamp: new Date(Date.now() - 22 * 3600 * 1000).toISOString(),
-        content: 'Thank you Dr. Sharmeen. The patient reported to Dumuria UHC this morning. Drain output is minimal (15ml) and wound looks clean without signs of leakage. Patient is grateful she did not have to rent a hotel in Khulna city for 2 weeks.',
+        senderDoctorId: upzDocNabila.doctor_id,
+        senderName: upzDocNabila.full_name,
+        senderRole: 'upazila_doctor',
+        senderFacility: upzDocNabila.facility_name,
+        timestamp: new Date(Date.now() - 20 * 3600 * 1000).toISOString(),
+        content: 'Thank you Dr. Sharmeen. The patient attended Dumuria UHC this morning. Drain output was only 15ml and incision is clean without erythema. Her vitals are completely stable.',
         isUrgent: false,
         attachmentType: 'vitals'
       },
       {
         id: 'msg-03',
-        senderDoctorId: cityDoc2.doctor_id,
-        senderName: cityDoc2.full_name,
-        senderRole: 'capital_specialist',
-        senderFacility: hospKhulnaMed.facility_name,
-        timestamp: new Date(Date.now() - 20 * 3600 * 1000).toISOString(),
-        content: 'Excellent clinical news. If tomorrow morning the 24-hour collection remains under 20ml, you may safely pull the drain at your health complex and apply a sterile pressure dressing. Keep me posted on any spikes.'
+        senderDoctorId: specSharmeen.doctor_id,
+        senderName: specSharmeen.full_name,
+        senderRole: 'city_specialist',
+        senderFacility: hospKMCH.facility_name,
+        timestamp: new Date(Date.now() - 18 * 3600 * 1000).toISOString(),
+        content: 'Splendid news. If tomorrow morning the 24-hour collection remains below 20ml, you are authorized to pull the Blake drain at your Dumuria complex and apply a sterile pressure dressing.'
       }
     ]
   };
 
-  const referral2: TransferReferral = {
+  const ref1: TransferReferral = {
     id: 'DGHS-REF-2026-8842',
-    patient: p2,
-    localDoctor: localDoc1,
-    originHospitalName: localDoc1.facility_name,
+    patient: p1,
+    localDoctor: upzDocNabila,
+    originHospitalName: upzDocNabila.facility_name,
+    originDivision: 'Khulna Division',
     originDistrict: 'Khulna',
     originUpazila: 'Dumuria',
-    targetHospital: hospKhulnaMed,
-    targetDoctor: cityDoc2,
+    targetHospital: hospKMCH,
+    targetDoctor: specSharmeen,
     urgency: 'code_amber',
     requiredBedType: 'hdu',
-    clinicalSummary: 'Emergency surgical management for ruptured acute cholecystitis with localized peritonitis. Treatment completed; returned home under Upazila Health Complex monitored recovery.',
+    clinicalSummary: 'Emergency surgery for ruptured acute cholecystitis with peritonitis. Treatment completed; returned home under Upazila Health Complex monitored recovery.',
     initialVitals: {
       bp: '110/70',
       heartRate: 98,
@@ -275,79 +513,287 @@ function createSeedReferrals(doctors: Doctor[], hospitals: Hospital[], patients:
       temp: 101.2,
       gcs: 15
     },
-    recommendedScore: 91,
+    recommendedScore: 92,
     createdAt: new Date(Date.now() - 6 * 24 * 3600 * 1000).toISOString(),
     transitStartedAt: new Date(Date.now() - 6 * 24 * 3600 * 1000 + 40 * 60 * 1000).toISOString(),
     admittedAt: new Date(Date.now() - 6 * 24 * 3600 * 1000 + 100 * 60 * 1000).toISOString(),
     status: 'referred_back',
     ambulanceId: 'GOV-AMB-KHU-018',
     transitEstimatedMinutes: 40,
-    reverseDirective: directiveSeed
+    reverseDirective: directive1
   };
 
-  // Seed 3: Admitted in Tertiary Hospital undergoing Neurosurgical treatment
-  const referral3: TransferReferral = {
-    id: 'DGHS-REF-2026-9210',
-    patient: p3,
-    localDoctor: localDoc2,
-    originHospitalName: localDoc2.facility_name,
+  // Patient 2: Active in Transit from Dumuria to Jashore 250 Bed Hospital (Dr. Nabila Khan & Dr. Md. Tariqul Islam)
+  const p2: Patient = {
+    patient_id: 'SHJ-P-000001',
+    identity_type: 'SASTHOJAL_TEST_ID',
+    identity_number: 'TEST-P-000001',
+    is_synthetic: true,
+    full_name: 'Sabbir Chowdhury',
+    date_of_birth: '1961-10-04',
+    age_years: 65,
+    sex: 'Male',
+    height_cm: 172,
+    weight_kg: 74,
+    blood_group: 'O+',
+    division: 'Khulna Division',
+    district: 'Khulna',
+    upazila: 'Dumuria',
+    current_problem: 'Severe open compound fracture of right tibia-fibula with compartment syndrome',
+    problem_description: 'Highway accident victim. Severe limb-threatening neurovascular compromise, absent dorsalis pedis pulse, tense right leg compartment. Requires urgent fasciotomy and external fixation.',
+    symptom_duration: '75 minutes',
+    known_allergies: 'Penicillin',
+    chronic_conditions: ['Hypertension'],
+    last_checkup_date: '2026-04-13'
+  };
+
+  const ref2: TransferReferral = {
+    id: 'DGHS-REF-2026-9104',
+    patient: p2,
+    localDoctor: upzDocNabila,
+    originHospitalName: upzDocNabila.facility_name,
+    originDivision: 'Khulna Division',
     originDistrict: 'Khulna',
-    originUpazila: 'Koyra',
-    targetHospital: hospAbuNaser,
-    targetDoctor: cityDoc3,
+    originUpazila: 'Dumuria',
+    targetHospital: hospJASH,
+    targetDoctor: specTariqul,
     urgency: 'code_red',
     requiredBedType: 'icu',
-    clinicalSummary: 'Severe head trauma with epidural hematoma. Urgent decompression craniotomy performed. Currently in Neuro-ICU on mechanical ventilator support.',
+    clinicalSummary: 'Compound tibia fracture with impending compartment syndrome. IV analgesics and splint applied. Immediate surgical theatre and ICU reservation required.',
     initialVitals: {
-      bp: '150/95',
-      heartRate: 58,
-      spo2: 91,
-      temp: 99.1,
-      gcs: 8
-    },
-    recommendedScore: 96,
-    createdAt: new Date(Date.now() - 14 * 3600 * 1000).toISOString(),
-    transitStartedAt: new Date(Date.now() - 13 * 3600 * 1000).toISOString(),
-    admittedAt: new Date(Date.now() - 10 * 3600 * 1000).toISOString(),
-    status: 'in_treatment',
-    ambulanceId: 'GOV-AMB-DELTA-003',
-    transitEstimatedMinutes: 160
-  };
-
-  // Seed 4: Pending Dispatch (Newly submitted emergency case)
-  const referral4: TransferReferral = {
-    id: 'DGHS-REF-2026-9302',
-    patient: p4,
-    localDoctor: localDoc1,
-    originHospitalName: localDoc1.facility_name,
-    originDistrict: 'Khulna',
-    originUpazila: 'Dacope',
-    targetHospital: hospDMCH,
-    targetDoctor: cityDoc2,
-    urgency: 'code_red',
-    requiredBedType: 'hdu',
-    clinicalSummary: 'Severe respiratory distress secondary to bilobar pneumonia. SpO2 84% on O2 6L. Patient requires high-flow nasal cannula or non-invasive ventilatory support in HDU.',
-    initialVitals: {
-      bp: '135/88',
-      heartRate: 118,
-      spo2: 84,
-      temp: 103.0,
+      bp: '95/60',
+      heartRate: 114,
+      spo2: 96,
+      temp: 98.4,
       gcs: 14
     },
     recommendedScore: 88,
-    createdAt: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
-    status: 'pending_dispatch',
-    transitEstimatedMinutes: 210
+    createdAt: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
+    transitStartedAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+    status: 'in_transit',
+    ambulanceId: 'GOV-AMB-KHU-042',
+    transitEstimatedMinutes: 65
   };
 
-  return [referral1, referral2, referral3, referral4];
+  // Patient 3: Admitted in Khulna Medical College Hospital from Dighalia (Dr. Tanvir Hossain & Dr. Sharmeen Akhter)
+  const p3: Patient = {
+    patient_id: 'SHJ-P-000003',
+    identity_type: 'SASTHOJAL_TEST_ID',
+    identity_number: 'TEST-P-000003',
+    is_synthetic: true,
+    full_name: 'Anisur Rahman',
+    date_of_birth: '1975-06-12',
+    age_years: 51,
+    sex: 'Male',
+    height_cm: 168,
+    weight_kg: 68,
+    blood_group: 'B+',
+    division: 'Khulna Division',
+    district: 'Khulna',
+    upazila: 'Dighalia',
+    current_problem: 'Perforated duodenal ulcer with localized peritonitis',
+    problem_description: 'Emergency Graham patch omentopexy performed at Khulna Medical College Hospital. Recovering in surgical ward; preparing reverse directive.',
+    symptom_duration: '2 days',
+    known_allergies: 'None',
+    chronic_conditions: ['Peptic Ulcer Disease'],
+    last_checkup_date: '2026-05-02'
+  };
+
+  const ref3: TransferReferral = {
+    id: 'DGHS-REF-2026-9210',
+    patient: p3,
+    localDoctor: upzDocTanvir,
+    originHospitalName: upzDocTanvir.facility_name,
+    originDivision: 'Khulna Division',
+    originDistrict: 'Khulna',
+    originUpazila: 'Dighalia',
+    targetHospital: hospKMCH,
+    targetDoctor: specSharmeen,
+    urgency: 'code_red',
+    requiredBedType: 'hdu',
+    clinicalSummary: 'Acute abdomen with pneumoperitoneum. Graham patch repair completed. Sepsis controlled; preparing reverse referral protocol back to Dighalia UHC.',
+    initialVitals: {
+      bp: '120/80',
+      heartRate: 84,
+      spo2: 97,
+      temp: 99.0,
+      gcs: 15
+    },
+    recommendedScore: 94,
+    createdAt: new Date(Date.now() - 20 * 3600 * 1000).toISOString(),
+    transitStartedAt: new Date(Date.now() - 19 * 3600 * 1000).toISOString(),
+    admittedAt: new Date(Date.now() - 17 * 3600 * 1000).toISOString(),
+    status: 'admitted_city_hospital',
+    ambulanceId: 'GOV-AMB-KHU-009',
+    transitEstimatedMinutes: 30
+  };
+
+  // Patient 4: In Dhaka Division (Savar) - Managed by Dr. Sajjad Ahmed & Dr. Kazi Mahfuzur Rahman (DMCH)
+  const p4: Patient = {
+    patient_id: 'SHJ-P-000009',
+    identity_type: 'SASTHOJAL_TEST_ID',
+    identity_number: 'TEST-P-000009',
+    is_synthetic: true,
+    full_name: 'Mahmud Biswas',
+    date_of_birth: '1978-04-12',
+    age_years: 48,
+    sex: 'Male',
+    height_cm: 165,
+    weight_kg: 71,
+    blood_group: 'B+',
+    division: 'Dhaka Division',
+    district: 'Dhaka',
+    upazila: 'Savar',
+    current_problem: 'Acute Anterior STEMI status post-primary PCI with stent to LAD',
+    problem_description: 'Coronary angioplasty with drug-eluting stent performed at Dhaka Medical College Hospital. Discharged to home in Savar under Savar Upazila Health Complex monitoring.',
+    symptom_duration: '3 days',
+    known_allergies: 'None',
+    chronic_conditions: ['Type 2 Diabetes'],
+    last_checkup_date: '2026-05-01'
+  };
+
+  const directive4: ReverseReferralDirective = {
+    id: 'DGHS-REV-2026-5520',
+    referralId: 'DGHS-REF-2026-9401',
+    issuedAt: new Date(Date.now() - 36 * 3600 * 1000).toISOString(),
+    cityDoctorId: specMahfuzur.doctor_id,
+    cityDoctorName: specMahfuzur.full_name,
+    cityDoctorSpecialty: specMahfuzur.specialty,
+    cityFacilityName: hospDMCH.facility_name,
+    localDoctorId: upzDocSajjad.doctor_id,
+    localDoctorName: upzDocSajjad.full_name,
+    localFacilityName: upzDocSajjad.facility_name,
+    procedureSummary: 'Primary PCI with single drug-eluting stent (DES) to mid-LAD via right radial access. TIMI 3 flow achieved.',
+    operativeNotes: '95% mid-LAD lesion crossed. Predilated with 2.5x12 balloon. 3.0x18mm DES deployed at 14 atm. Zero residual stenosis. Radial compression band removed after 4h.',
+    dischargeDiagnosis: 'Post-AMI Day 3, status post-PCI to LAD. Hemodynamically stable, ECG demonstrates resolving ST elevations.',
+    patientConditionAtDischarge: 'Stable',
+    medications: [
+      {
+        name: 'Tab. Aspirin 75mg + Clopidogrel 75mg (Dual Antiplatelet)',
+        dosage: '1 tablet once daily',
+        frequency: 'Daily after lunch',
+        duration: '12 months strictly',
+        instructions: 'CRITICAL: Do NOT discontinue without cardiology consultation.'
+      },
+      {
+        name: 'Tab. Atorvastatin 40mg',
+        dosage: '1 tablet once daily',
+        frequency: 'At bedtime',
+        duration: 'Long term',
+        instructions: 'Lipid stabilization.'
+      },
+      {
+        name: 'Tab. Metoprolol Tartrate 25mg',
+        dosage: 'Half tablet twice daily',
+        frequency: '12-hourly with meals',
+        duration: 'Ongoing',
+        instructions: 'Monitor resting heart rate (target 60-70 bpm).'
+      }
+    ],
+    localCareDirectives: {
+      woundCare: 'Right radial puncture site: Keep clean and dry for 48 hours. Remove adhesive plaster. Inspect for hematoma or radial pseudoaneurysm.',
+      dietaryInstructions: 'Low-salt (<3g/day), strictly oil-reduced cardiac diet. Avoid tobacco and sweetened tea.',
+      activityMobility: 'Light indoor walking only. No strenuous physical labor or heavy arm lifting for 2 weeks.'
+    },
+    redFlagWarnings: [
+      'Recurrent chest tightness, squeezing pressure, or radiating pain to jaw/arm',
+      'Sudden shortness of breath, orthopnea, or bilateral pedal edema',
+      'Resting heart rate <50 bpm or >110 bpm',
+      'Bleeding from puncture site or tarry black stools'
+    ],
+    scheduledMilestones: [
+      {
+        dayLabel: 'Day 3 Post-Discharge (Radial Site & Vitals Audit)',
+        scheduledDate: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+        recommendedChecks: ['Check BP and Pulse rate', 'Radial puncture site palpation', 'Medication adherence verification'],
+        completed: true,
+        completedAt: new Date(Date.now() - 10 * 3600 * 1000).toISOString(),
+        doctorNotes: 'Patient visited Savar UHC. Radial artery pulse palpable, no hematoma. BP 118/74, Pulse 66 bpm regular. Patient taking DAPT reliably.',
+        recordedVitals: {
+          bpSystolic: 118,
+          bpDiastolic: 74,
+          heartRate: 66,
+          spo2: 98,
+          temperatureF: 98.4,
+          woundCondition: 'clean_healing'
+        }
+      },
+      {
+        dayLabel: 'Day 7 Post-Discharge (ECG & Symptom Review)',
+        scheduledDate: new Date(Date.now() + 4 * 24 * 3600 * 1000).toISOString(),
+        recommendedChecks: ['12-lead ECG review at Savar UHC', 'Check for chest tightness on exertion', 'Serum creatinine check if indicated'],
+        completed: false
+      },
+      {
+        dayLabel: 'Day 30 (Post-PCI 1-Month Audit)',
+        scheduledDate: new Date(Date.now() + 27 * 24 * 3600 * 1000).toISOString(),
+        recommendedChecks: ['Functional cardiac status review', 'Lipid profile review', 'Referral to DMCH for routine echo review if indicated'],
+        completed: false
+      }
+    ],
+    chatMessages: [
+      {
+        id: 'msg-dhaka-01',
+        senderDoctorId: specMahfuzur.doctor_id,
+        senderName: specMahfuzur.full_name,
+        senderRole: 'city_specialist',
+        senderFacility: hospDMCH.facility_name,
+        timestamp: new Date(Date.now() - 35 * 3600 * 1000).toISOString(),
+        content: 'Dr. Sajjad, patient Mahmud Biswas has been discharged back to Savar following successful primary PCI to LAD. Please reinforce strict compliance with Dual Antiplatelet Therapy (Aspirin + Clopidogrel).'
+      },
+      {
+        id: 'msg-dhaka-02',
+        senderDoctorId: upzDocSajjad.doctor_id,
+        senderName: upzDocSajjad.full_name,
+        senderRole: 'upazila_doctor',
+        senderFacility: upzDocSajjad.facility_name,
+        timestamp: new Date(Date.now() - 10 * 3600 * 1000).toISOString(),
+        content: 'Thank you Dr. Mahfuzur. The patient reported to Savar UHC this morning. Radial site is pristine and resting pulse is 66 bpm on Metoprolol. Patient is resting comfortably at home in Savar.',
+        isUrgent: false,
+        attachmentType: 'vitals'
+      }
+    ]
+  };
+
+  const ref4: TransferReferral = {
+    id: 'DGHS-REF-2026-9401',
+    patient: p4,
+    localDoctor: upzDocSajjad,
+    originHospitalName: upzDocSajjad.facility_name,
+    originDivision: 'Dhaka Division',
+    originDistrict: 'Dhaka',
+    originUpazila: 'Savar',
+    targetHospital: hospDMCH,
+    targetDoctor: specMahfuzur,
+    urgency: 'code_red',
+    requiredBedType: 'icu',
+    clinicalSummary: 'Acute anterior STEMI. Primary PCI with DES to LAD completed. Transferred back home to Savar for Upazila Health Complex recovery monitoring.',
+    initialVitals: {
+      bp: '125/80',
+      heartRate: 72,
+      spo2: 98,
+      temp: 98.6,
+      gcs: 15
+    },
+    recommendedScore: 95,
+    createdAt: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
+    transitStartedAt: new Date(Date.now() - 5 * 24 * 3600 * 1000 + 30 * 60 * 1000).toISOString(),
+    admittedAt: new Date(Date.now() - 5 * 24 * 3600 * 1000 + 80 * 60 * 1000).toISOString(),
+    status: 'referred_back',
+    ambulanceId: 'GOV-AMB-DHA-004',
+    transitEstimatedMinutes: 45,
+    reverseDirective: directive4
+  };
+
+  return [ref1, ref2, ref3, ref4];
 }
 
 class SasthojaalDataService {
-  private doctors: Doctor[] = [];
-  private hospitals: Hospital[] = [];
+  private doctors: Doctor[] = REGISTERED_DOCTORS;
+  private hospitals: Hospital[] = FIVE_CITY_HOSPITALS;
   private patients: Patient[] = [];
   private transfers: TransferReferral[] = [];
+  private currentDoctorId: string = 'DOC-UPZ-01'; // Default to Dr. Nabila Khan
   private isLoaded: boolean = false;
   private listeners: Array<() => void> = [];
 
@@ -362,34 +808,41 @@ class SasthojaalDataService {
     }
 
     try {
-      // Fetch datasets
-      const [docRes, hospRes, patRes] = await Promise.all([
-        fetch('/assets/aistudio/doctors_bc76a0e5.json').then((r) => r.json()),
-        fetch('/assets/aistudio/hospitals_a4fd0a18.json').then((r) => r.json()),
-        fetch('/assets/aistudio/patients_b62a1205.json').then((r) => r.json())
-      ]);
+      // Fetch patients dataset from workspace
+      const patRes = await fetch('/assets/aistudio/patients_b62a1205.json').then((r) => r.json());
+      const rawPatients = (patRes.patients || []) as any[];
 
-      this.doctors = (docRes.doctors || []) as Doctor[];
-      const rawHospitals = (hospRes.hospitals || []) as Hospital[];
-      this.patients = (patRes.patients || []) as Patient[];
+      // Enhance each patient with their accurate official Bangladesh Division
+      this.patients = rawPatients.map((p) => {
+        const division = getDivisionForDistrict(p.district || 'Khulna');
+        return {
+          ...p,
+          division
+        } as Patient;
+      });
 
-      // Check localStorage for saved hospital bed state adjustments
-      const savedHospState = localStorage.getItem(STORAGE_KEYS.HOSPITALS_STATE);
-      if (savedHospState) {
+      // The 5 city hospitals and 9 registered doctors are our official dataset
+      this.hospitals = FIVE_CITY_HOSPITALS;
+      this.doctors = REGISTERED_DOCTORS;
+
+      // Check saved hospital bed adjustments
+      const savedHosp = localStorage.getItem(STORAGE_KEYS.HOSPITALS_STATE);
+      if (savedHosp) {
         try {
-          this.hospitals = JSON.parse(savedHospState);
+          const parsed = JSON.parse(savedHosp);
+          if (Array.isArray(parsed) && parsed.length === 5) {
+            this.hospitals = parsed;
+          }
         } catch {
-          this.hospitals = rawHospitals;
+          // fallback to FIVE_CITY_HOSPITALS
         }
-      } else {
-        this.hospitals = rawHospitals;
       }
 
-      // Check localStorage for transfers
-      const savedTransfers = localStorage.getItem(STORAGE_KEYS.TRANSFERS);
-      if (savedTransfers) {
+      // Check saved transfers
+      const savedTrans = localStorage.getItem(STORAGE_KEYS.TRANSFERS);
+      if (savedTrans) {
         try {
-          this.transfers = JSON.parse(savedTransfers);
+          this.transfers = JSON.parse(savedTrans);
         } catch {
           this.transfers = createSeedReferrals(this.doctors, this.hospitals, this.patients);
           this.persistTransfers();
@@ -399,9 +852,15 @@ class SasthojaalDataService {
         this.persistTransfers();
       }
 
+      // Check authenticated doctor
+      const savedAuth = localStorage.getItem(STORAGE_KEYS.AUTH_DOCTOR_ID);
+      if (savedAuth && this.doctors.some((d) => d.doctor_id === savedAuth)) {
+        this.currentDoctorId = savedAuth;
+      }
+
       this.isLoaded = true;
     } catch (err) {
-      console.warn('Failed to load assets via fetch, falling back to minimal bootstrap:', err);
+      console.warn('Fallback loading dataset:', err);
       this.isLoaded = true;
     }
 
@@ -458,12 +917,53 @@ class SasthojaalDataService {
     return this.transfers;
   }
 
-  public getTransferById(id: string): TransferReferral | undefined {
-    return this.transfers.find((t) => t.id === id);
+  public getCurrentDoctor(): Doctor {
+    const doc = this.doctors.find((d) => d.doctor_id === this.currentDoctorId);
+    return doc || this.doctors[0];
+  }
+
+  public setCurrentDoctor(doctorId: string): boolean {
+    const doc = this.doctors.find((d) => d.doctor_id === doctorId);
+    if (!doc) return false;
+    this.currentDoctorId = doctorId;
+    localStorage.setItem(STORAGE_KEYS.AUTH_DOCTOR_ID, doctorId);
+    this.notify();
+    return true;
+  }
+
+  public logout(): void {
+    localStorage.removeItem(STORAGE_KEYS.AUTH_DOCTOR_ID);
+    this.notify();
   }
 
   /**
-   * Dispatches a new emergency transfer referral
+   * Returns patients accessible to the given doctor:
+   * "each local doctor can only access/see the patients in their own division in their platform."
+   */
+  public getPatientsForDoctor(doctor: Doctor): Patient[] {
+    if (doctor.role === 'upazila_doctor') {
+      return this.patients.filter((p) => p.division === doctor.division);
+    }
+    // City specialist can see patients referred to their hospital or within their division
+    return this.patients;
+  }
+
+  /**
+   * Returns transfers accessible to the doctor based on division & role
+   */
+  public getTransfersForDoctor(doctor: Doctor): TransferReferral[] {
+    if (doctor.role === 'upazila_doctor') {
+      // Upazila doctor sees cases originating in their division
+      return this.transfers.filter((t) => t.originDivision === doctor.division);
+    }
+    // City specialist sees transfers targeted to their hospital or specialty
+    return this.transfers.filter(
+      (t) => t.targetDoctor.doctor_id === doctor.doctor_id || t.targetHospital.location.district === doctor.district
+    );
+  }
+
+  /**
+   * Dispatches a new emergency transfer from Upazila Doctor to City Specialist
    */
   public dispatchEmergencyTransfer(data: {
     patient: Patient;
@@ -492,6 +992,7 @@ class SasthojaalDataService {
       patient: data.patient,
       localDoctor: data.localDoctor,
       originHospitalName: data.localDoctor.facility_name,
+      originDivision: data.localDoctor.division,
       originDistrict: data.localDoctor.district,
       originUpazila: data.localDoctor.upazila || data.patient.upazila,
       targetHospital: data.targetHospital,
@@ -508,7 +1009,7 @@ class SasthojaalDataService {
       transitEstimatedMinutes: data.transitEstimatedMinutes
     };
 
-    // Deduct bed from target hospital
+    // Deduct bed from city hospital
     const targetHospIdx = this.hospitals.findIndex((h) => h.hospital_id === data.targetHospital.hospital_id);
     if (targetHospIdx !== -1) {
       const hosp = this.hospitals[targetHospIdx];
@@ -535,11 +1036,11 @@ class SasthojaalDataService {
     const t = this.transfers[idx];
     t.status = newStatus;
 
-    if (newStatus === 'admitted_tertiary' && !t.admittedAt) {
+    if (newStatus === 'admitted_city_hospital' && !t.admittedAt) {
       t.admittedAt = new Date().toISOString();
     }
 
-    // If case has been referred back or closed, free up the bed at target hospital
+    // When referred back home, free up the bed at the city hospital
     if ((newStatus === 'referred_back' || newStatus === 'recovered_closed') && t.status !== 'referred_back') {
       const hospIdx = this.hospitals.findIndex((h) => h.hospital_id === t.targetHospital.hospital_id);
       if (hospIdx !== -1) {
@@ -557,7 +1058,7 @@ class SasthojaalDataService {
   }
 
   /**
-   * Creates or updates a Reverse Referral Directive from City Specialist back to Local Upazila Doctor
+   * Creates or updates a Reverse Referral Directive from City Specialist back to Upazila Doctor
    */
   public issueReverseDirective(
     transferId: string,
@@ -579,10 +1080,10 @@ class SasthojaalDataService {
           id: `msg-${Date.now()}`,
           senderDoctorId: directiveData.cityDoctorId,
           senderName: directiveData.cityDoctorName,
-          senderRole: 'capital_specialist',
+          senderRole: 'city_specialist',
           senderFacility: directiveData.cityFacilityName,
           timestamp: new Date().toISOString(),
-          content: `Formal Post-Care Reverse Referral Directive issued for ${transfer.patient.full_name}. Please review operative notes, medication schedules, and follow-up milestones.`
+          content: `Formal Post-Care Reverse Referral Directive issued for ${transfer.patient.full_name}. Home recovery plan initialized under Upazila Health Complex supervision.`
         }
       ]
     };
@@ -590,7 +1091,7 @@ class SasthojaalDataService {
     transfer.reverseDirective = directive;
     transfer.status = 'referred_back';
 
-    // Free tertiary bed
+    // Free bed at city hospital
     const hospIdx = this.hospitals.findIndex((h) => h.hospital_id === transfer.targetHospital.hospital_id);
     if (hospIdx !== -1) {
       const bedProp = transfer.requiredBedType === 'icu' ? 'icu_beds' : transfer.requiredBedType === 'hdu' ? 'hdu_beds' : 'general_beds';
@@ -606,14 +1107,14 @@ class SasthojaalDataService {
   }
 
   /**
-   * Sends a secure doctor-to-doctor message on a case
+   * Adds a secure chat message between the two authorized doctors
    */
   public addChatMessage(
     transferId: string,
     message: {
       senderDoctorId: string;
       senderName: string;
-      senderRole: 'local_doctor' | 'capital_specialist';
+      senderRole: 'upazila_doctor' | 'city_specialist';
       senderFacility: string;
       content: string;
       isUrgent?: boolean;
@@ -622,6 +1123,14 @@ class SasthojaalDataService {
   ): DoctorChatMessage | null {
     const transfer = this.transfers.find((t) => t.id === transferId);
     if (!transfer || !transfer.reverseDirective) return null;
+
+    // Strict access check: only the Upazila Doctor or City Specialist on this case can post!
+    const isLocalDoc = message.senderDoctorId === transfer.localDoctor.doctor_id;
+    const isCityDoc = message.senderDoctorId === transfer.targetDoctor.doctor_id || message.senderDoctorId === transfer.reverseDirective.cityDoctorId;
+    if (!isLocalDoc && !isCityDoc) {
+      console.warn('Unauthorized attempt to post in private tele-consultation channel');
+      return null;
+    }
 
     const newMsg: DoctorChatMessage = {
       id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
@@ -635,7 +1144,7 @@ class SasthojaalDataService {
   }
 
   /**
-   * Completes a local follow-up milestone (e.g. Day 3, Day 7, Day 14)
+   * Completes an Upazila clinic follow-up milestone
    */
   public completeMilestone(
     transferId: string,
@@ -656,21 +1165,19 @@ class SasthojaalDataService {
     milestone.doctorNotes = data.notes;
     milestone.recordedVitals = data.vitals;
 
-    // Check if all milestones are completed -> marks case as recovered
     const allDone = transfer.reverseDirective.scheduledMilestones.every((m) => m.completed);
     if (allDone) {
       transfer.status = 'recovered_closed';
     }
 
-    // Auto-notify city specialist via chat
     const alertMsg: DoctorChatMessage = {
       id: `msg-auto-${Date.now()}`,
       senderDoctorId: transfer.localDoctor.doctor_id,
       senderName: transfer.localDoctor.full_name,
-      senderRole: 'local_doctor',
+      senderRole: 'upazila_doctor',
       senderFacility: transfer.originHospitalName,
       timestamp: new Date().toISOString(),
-      content: `[Upazila Health Complex Check-in Logged] ${milestone.dayLabel} completed. Vitals: BP ${data.vitals?.bpSystolic || '—'}/${data.vitals?.bpDiastolic || '—'}, SpO2 ${data.vitals?.spo2 || '—'}%, Wound condition: ${data.vitals?.woundCondition?.replace('_', ' ') || 'Normal'}. Notes: ${data.notes}`,
+      content: `[Upazila Clinic Check-in Logged] ${milestone.dayLabel} completed. Vitals: BP ${data.vitals?.bpSystolic || '—'}/${data.vitals?.bpDiastolic || '—'}, SpO2 ${data.vitals?.spo2 || '—'}%, Wound: ${data.vitals?.woundCondition?.replace('_', ' ') || 'Normal'}. Notes: ${data.notes}`,
       attachmentType: 'vitals'
     };
     transfer.reverseDirective.chatMessages.push(alertMsg);
@@ -680,7 +1187,7 @@ class SasthojaalDataService {
   }
 
   /**
-   * Adjusts bed capacity for live demo simulation
+   * Live simulation bed adjustment
    */
   public adjustBedCount(
     hospitalId: string,
@@ -699,9 +1206,6 @@ class SasthojaalDataService {
     this.persistHospitals();
   }
 
-  /**
-   * Adds an emergency patient dynamically
-   */
   public registerEmergencyPatient(patient: Patient): Patient {
     this.patients.unshift(patient);
     this.notify();

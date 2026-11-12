@@ -13,7 +13,8 @@ import { HospitalCapacityView } from './components/HospitalCapacityView.tsx';
 import { PatientRegistryView } from './components/PatientRegistryView.tsx';
 import { EmergencyTransferModal } from './components/EmergencyTransferModal.tsx';
 import { ReverseDirectiveModal } from './components/ReverseDirectiveModal.tsx';
-import { Activity, ShieldCheck, HeartPulse, CheckCircle2 } from 'lucide-react';
+import { DoctorAuthModal } from './components/DoctorAuthModal.tsx';
+import { HeartPulse, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -24,6 +25,9 @@ export default function App() {
 
   // Active Doctor Persona
   const [activeDoctor, setActiveDoctor] = useState<Doctor | null>(null);
+
+  // Authentication Modal state
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Active Main Navigation Tab
   const [activeTab, setActiveTab] = useState<'pipeline' | 'reverse_care' | 'hospitals' | 'patients'>('pipeline');
@@ -55,21 +59,19 @@ export default function App() {
         setPatients(initData.patients);
         setTransfers(initData.transfers);
 
-        // Default to Dr. Nabila Khan (Dumuria UHC, local doctor)
-        const defaultDoc = initData.doctors.find((d) => d.doctor_id === 'SHJ-D-L-001') || initData.doctors[0];
-        setActiveDoctor(defaultDoc || null);
+        const currentDoc = dataService.getCurrentDoctor();
+        setActiveDoctor(currentDoc);
 
-        // Pre-select reverse referral case
         const revCase = initData.transfers.find((t) => t.reverseDirective);
         if (revCase) {
           setSelectedReverseCaseId(revCase.id);
         }
 
-        // Subscribe to live state updates
         unsubscribe = dataService.subscribe(() => {
           setTransfers([...dataService.getTransfers()]);
           setHospitals([...dataService.getHospitals()]);
           setPatients([...dataService.getPatients()]);
+          setActiveDoctor(dataService.getCurrentDoctor());
         });
       } catch (err) {
         console.error('Failed to load initial data', err);
@@ -102,11 +104,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-teal-700 selection:text-white">
-      {/* Top Directorate & Doctor Header */}
+      {/* Top Directorate & Authenticated Doctor Header */}
       <Navbar
         activeDoctor={activeDoctor}
-        doctors={doctors}
-        onSelectDoctor={(doc) => setActiveDoctor(doc)}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
         activeTab={activeTab}
         onSelectTab={(tab) => setActiveTab(tab)}
         onOpenEmergencyModal={() => {
@@ -157,12 +158,14 @@ export default function App() {
         {activeTab === 'hospitals' && (
           <HospitalCapacityView
             hospitals={hospitals}
+            doctors={doctors}
           />
         )}
 
         {activeTab === 'patients' && (
           <PatientRegistryView
             patients={patients}
+            activeDoctor={activeDoctor}
             onInitiateTransfer={(p) => {
               setPatientForTransferModal(p);
               setIsEmergencyModalOpen(true);
@@ -185,7 +188,22 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Modals */}
+      {/* Doctor Authentication Modal */}
+      {isAuthModalOpen && (
+        <DoctorAuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          doctors={doctors}
+          currentDoctor={activeDoctor}
+          onSelectDoctor={(doc) => {
+            dataService.setCurrentDoctor(doc.doctor_id);
+            setActiveDoctor(doc);
+            showToast(`Authenticated as ${doc.full_name} (${doc.facility_name}, ${doc.division})`);
+          }}
+        />
+      )}
+
+      {/* Emergency Transfer Modal */}
       {isEmergencyModalOpen && (
         <EmergencyTransferModal
           isOpen={isEmergencyModalOpen}
@@ -199,12 +217,13 @@ export default function App() {
           patients={patients}
           preselectedPatient={patientForTransferModal}
           onTransferDispatched={(transferId) => {
-            showToast(`Ambulance Transfer ${transferId} dispatched to tertiary center.`);
+            showToast(`Ambulance Transfer ${transferId} dispatched to designated city hospital.`);
             setActiveTab('pipeline');
           }}
         />
       )}
 
+      {/* Reverse Referral Directive Modal */}
       {transferForReverseModal && (
         <ReverseDirectiveModal
           isOpen={!!transferForReverseModal}
@@ -212,7 +231,7 @@ export default function App() {
           transfer={transferForReverseModal}
           activeDoctor={activeDoctor}
           onDirectiveIssued={() => {
-            showToast(`Reverse Referral Directive issued for ${transferForReverseModal.patient.full_name}. Home recovery initialized.`);
+            showToast(`Reverse Directive issued for ${transferForReverseModal.patient.full_name}. Care handed back to Upazila Doctor.`);
             setSelectedReverseCaseId(transferForReverseModal.id);
             setActiveTab('reverse_care');
           }}

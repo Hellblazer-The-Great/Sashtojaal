@@ -1,11 +1,10 @@
 import React from 'react';
 import { Doctor } from '../types/index.ts';
-import { Activity, ShieldCheck, UserCheck, Stethoscope, Building2, Users, ArrowLeftRight, HeartPulse } from 'lucide-react';
+import { Activity, ShieldCheck, Stethoscope, Building2, Users, ArrowLeftRight, HeartPulse, LogIn, MapPin } from 'lucide-react';
 
 interface NavbarProps {
   activeDoctor: Doctor;
-  doctors: Doctor[];
-  onSelectDoctor: (doctor: Doctor) => void;
+  onOpenAuthModal: () => void;
   activeTab: 'pipeline' | 'reverse_care' | 'hospitals' | 'patients';
   onSelectTab: (tab: 'pipeline' | 'reverse_care' | 'hospitals' | 'patients') => void;
   onOpenEmergencyModal: () => void;
@@ -15,8 +14,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeDoctor,
-  doctors,
-  onSelectDoctor,
+  onOpenAuthModal,
   activeTab,
   onSelectTab,
   onOpenEmergencyModal,
@@ -57,63 +55,50 @@ export const Navbar: React.FC<NavbarProps> = ({
                 স্বাস্থ্যজাল
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">Government Hospital Emergency Referral & Reverse Care Network</p>
+            <p className="text-xs text-slate-400 mt-0.5">Government Hospital Emergency Referral &amp; Reverse Care Network</p>
           </div>
         </div>
 
-        {/* Doctor Persona Switcher */}
-        <div className="flex items-center gap-3 bg-slate-800/90 border border-slate-700/80 rounded-lg p-1.5 pl-3">
-          <div className="flex items-center gap-2 text-xs">
-            <Stethoscope className="w-4 h-4 text-teal-400" />
+        {/* Doctor Authentication & Active Session Profile */}
+        <div className="flex items-center gap-3 bg-slate-800/90 border border-slate-700/80 rounded-xl p-1.5 pl-3.5 shadow-xs">
+          <div className="flex items-center gap-2.5 text-xs">
+            <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-teal-400 font-bold">
+              <Stethoscope className="w-4 h-4 text-teal-400" />
+            </div>
             <div className="text-left">
               <div className="flex items-center gap-1.5">
-                <span className="font-medium text-slate-200">{activeDoctor.full_name}</span>
+                <span className="font-bold text-slate-100">{activeDoctor.full_name}</span>
                 <span
-                  className={`text-[10px] font-semibold px-1 rounded uppercase tracking-wider ${
-                    activeDoctor.role === 'local_doctor'
+                  className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase tracking-wider ${
+                    activeDoctor.role === 'upazila_doctor'
                       ? 'bg-blue-950 text-blue-300 border border-blue-800'
                       : 'bg-emerald-950 text-emerald-300 border border-emerald-800'
                   }`}
                 >
-                  {activeDoctor.role === 'local_doctor' ? 'Local Upazila Doctor' : 'City Specialist'}
+                  {activeDoctor.role === 'upazila_doctor' ? 'Upazila Doctor' : 'City Specialist'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 truncate max-w-[240px]">
-                {activeDoctor.facility_name} • <span className="font-mono text-slate-300">{activeDoctor.registration_number}</span>
-              </p>
+              <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
+                <span className="truncate max-w-[190px]">{activeDoctor.facility_name}</span>
+                <span>•</span>
+                <span className="text-teal-400 font-medium flex items-center gap-0.5">
+                  <MapPin className="w-3 h-3 text-slate-500" />
+                  {activeDoctor.division}
+                </span>
+                <span>•</span>
+                <span className="font-mono text-slate-300">{activeDoctor.registration_number}</span>
+              </div>
             </div>
           </div>
 
           <div className="border-l border-slate-700 pl-2">
-            <select
-              aria-label="Switch Active Doctor Persona"
-              className="bg-slate-900 text-xs text-slate-200 border border-slate-700 rounded px-2 py-1 outline-none focus:border-teal-500 cursor-pointer"
-              value={activeDoctor.doctor_id}
-              onChange={(e) => {
-                const doc = doctors.find((d) => d.doctor_id === e.target.value);
-                if (doc) onSelectDoctor(doc);
-              }}
+            <button
+              onClick={onOpenAuthModal}
+              className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-700 text-teal-300 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
             >
-              <optgroup label="Local Upazila Doctors (Originating Clinic)">
-                {doctors
-                  .filter((d) => d.role === 'local_doctor')
-                  .slice(0, 5)
-                  .map((d) => (
-                    <option key={d.doctor_id} value={d.doctor_id}>
-                      {d.full_name} ({d.facility_name.split(' ')[0]})
-                    </option>
-                  ))}
-              </optgroup>
-              <optgroup label="Tertiary Specialists (Receiving Hospitals)">
-                {doctors
-                  .filter((d) => d.role === 'capital_specialist')
-                  .map((d) => (
-                    <option key={d.doctor_id} value={d.doctor_id}>
-                      {d.full_name} ({d.specialty} - {d.facility_name.split(' ')[0]})
-                    </option>
-                  ))}
-              </optgroup>
-            </select>
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Switch Doctor</span>
+            </button>
           </div>
         </div>
 
@@ -121,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div>
           <button
             onClick={onOpenEmergencyModal}
-            className="flex items-center gap-2 bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-sm shadow-rose-900/40 transition-colors cursor-pointer"
+            className="flex items-center gap-2 bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-lg shadow-sm shadow-rose-900/40 transition-colors cursor-pointer"
           >
             <Activity className="w-4 h-4 animate-pulse" />
             <span>Initiate Emergency Transfer</span>
@@ -140,7 +125,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           <ArrowLeftRight className="w-3.5 h-3.5" />
-          <span>Active Transfers & Dispatch</span>
+          <span>Active Transfers &amp; Dispatch</span>
           {activeTransfersCount > 0 && (
             <span className="font-mono bg-rose-500 text-white rounded-full px-1.5 py-0.2 text-[10px] font-bold">
               {activeTransfersCount}
@@ -157,7 +142,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Reverse Referral & Post-Care Directives</span>
+          <span>Reverse Referral &amp; Post-Care Directives</span>
           {reverseCareCount > 0 && (
             <span className="font-mono bg-teal-600 text-white rounded-full px-1.5 py-0.2 text-[10px] font-bold">
               {reverseCareCount}
@@ -174,7 +159,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           }`}
         >
           <Building2 className="w-3.5 h-3.5" />
-          <span>Live Hospital Bed Capacity</span>
+          <span>Live Hospital Bed Capacity (5 City Hospitals)</span>
         </button>
 
         <button
@@ -187,6 +172,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <Users className="w-3.5 h-3.5" />
           <span>Government Patient Directory</span>
+          {activeDoctor.role === 'upazila_doctor' && (
+            <span className="text-[10px] bg-blue-950 text-blue-300 border border-blue-800 px-1 rounded font-medium">
+              {activeDoctor.division.split(' ')[0]} Only
+            </span>
+          )}
         </button>
       </div>
     </header>
