@@ -1,0 +1,1514 @@
+{
+  "dataset": "Sasthojal synthetic government hospital test data",
+  "generated_at": "2026-11-12",
+  "count": 25,
+  "warning": "Fictional test records. Names may resemble real public facilities, but all operational details and capacity values are invented. Do not use for real referrals or admission decisions.",
+  "hospitals": [
+    {
+      "hospital_id": "SHJ-H-U-001",
+      "facility_name": "Dumuria Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Khulna",
+        "upazila": "Dumuria",
+        "address": "Dumuria, Khulna (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Gynaecology & Obstetrics",
+        "Dermatology",
+        "Orthopaedics",
+        "General Surgery",
+        "Medicine",
+        "ENT"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 30,
+          "occupied": 25,
+          "available": 5
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-002",
+      "facility_name": "Dighalia Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Khulna",
+        "upazila": "Dighalia",
+        "address": "Dighalia, Khulna (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Dermatology",
+        "Emergency",
+        "General Surgery",
+        "Orthopaedics"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 50,
+          "occupied": 33,
+          "available": 17
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-003",
+      "facility_name": "Batiaghata Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Khulna",
+        "upazila": "Batiaghata",
+        "address": "Batiaghata, Khulna (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Medicine",
+        "Emergency",
+        "Paediatrics",
+        "Dermatology",
+        "General Surgery"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 50,
+          "occupied": 35,
+          "available": 15
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-004",
+      "facility_name": "Paikgachha Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Khulna",
+        "upazila": "Paikgachha",
+        "address": "Paikgachha, Khulna (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Medicine",
+        "Dermatology",
+        "Emergency",
+        "Paediatrics",
+        "General Surgery",
+        "Gynaecology & Obstetrics"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 20,
+          "occupied": 14,
+          "available": 6
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-005",
+      "facility_name": "Terokhada Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Khulna",
+        "upazila": "Terokhada",
+        "address": "Terokhada, Khulna (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Medicine",
+        "Gynaecology & Obstetrics",
+        "Orthopaedics",
+        "Paediatrics"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 50,
+          "occupied": 31,
+          "available": 19
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-006",
+      "facility_name": "Rupsa Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Khulna",
+        "upazila": "Rupsa",
+        "address": "Rupsa, Khulna (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Gynaecology & Obstetrics",
+        "Orthopaedics",
+        "ENT",
+        "Emergency"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 30,
+          "occupied": 19,
+          "available": 11
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-007",
+      "facility_name": "Koyra Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Khulna",
+        "upazila": "Koyra",
+        "address": "Koyra, Khulna (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "ENT",
+        "Paediatrics",
+        "General Surgery",
+        "Dermatology",
+        "Orthopaedics",
+        "Emergency"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 20,
+          "occupied": 14,
+          "available": 6
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-008",
+      "facility_name": "Dacope Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Khulna",
+        "upazila": "Dacope",
+        "address": "Dacope, Khulna (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "General Surgery",
+        "Emergency",
+        "ENT",
+        "Dermatology"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 30,
+          "occupied": 23,
+          "available": 7
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-009",
+      "facility_name": "Phultala Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Khulna",
+        "upazila": "Phultala",
+        "address": "Phultala, Khulna (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Medicine",
+        "Gynaecology & Obstetrics",
+        "Orthopaedics",
+        "General Surgery",
+        "Paediatrics"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 50,
+          "occupied": 36,
+          "available": 14
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-010",
+      "facility_name": "Manirampur Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Jashore",
+        "upazila": "Manirampur",
+        "address": "Manirampur, Jashore (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "ENT",
+        "General Surgery",
+        "Gynaecology & Obstetrics",
+        "Dermatology"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 20,
+          "occupied": 17,
+          "available": 3
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-011",
+      "facility_name": "Jhikargachha Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Jashore",
+        "upazila": "Jhikargachha",
+        "address": "Jhikargachha, Jashore (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Dermatology",
+        "Orthopaedics",
+        "General Surgery",
+        "Emergency",
+        "ENT",
+        "Paediatrics"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 30,
+          "occupied": 26,
+          "available": 4
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-012",
+      "facility_name": "Abhaynagar Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Jashore",
+        "upazila": "Abhaynagar",
+        "address": "Abhaynagar, Jashore (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Paediatrics",
+        "ENT",
+        "Medicine",
+        "General Surgery",
+        "Dermatology",
+        "Emergency"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 20,
+          "occupied": 10,
+          "available": 10
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-013",
+      "facility_name": "Tala Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Satkhira",
+        "upazila": "Tala",
+        "address": "Tala, Satkhira (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "ENT",
+        "Medicine",
+        "Gynaecology & Obstetrics",
+        "General Surgery"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 50,
+          "occupied": 33,
+          "available": 17
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-014",
+      "facility_name": "Debhata Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Satkhira",
+        "upazila": "Debhata",
+        "address": "Debhata, Satkhira (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Medicine",
+        "General Surgery",
+        "Emergency",
+        "Dermatology",
+        "Paediatrics",
+        "ENT"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 30,
+          "occupied": 26,
+          "available": 4
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-015",
+      "facility_name": "Mollahat Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Bagerhat",
+        "upazila": "Mollahat",
+        "address": "Mollahat, Bagerhat (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Orthopaedics",
+        "Emergency",
+        "Dermatology",
+        "ENT",
+        "Gynaecology & Obstetrics"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 50,
+          "occupied": 40,
+          "available": 10
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-016",
+      "facility_name": "Kumarkhali Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Kushtia",
+        "upazila": "Kumarkhali",
+        "address": "Kumarkhali, Kushtia (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Paediatrics",
+        "Orthopaedics",
+        "Medicine",
+        "General Surgery",
+        "Dermatology"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 20,
+          "occupied": 10,
+          "available": 10
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-017",
+      "facility_name": "Paba Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Rajshahi",
+        "upazila": "Paba",
+        "address": "Paba, Rajshahi (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Orthopaedics",
+        "Dermatology",
+        "Paediatrics",
+        "Emergency",
+        "ENT",
+        "Medicine"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 50,
+          "occupied": 31,
+          "available": 19
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-018",
+      "facility_name": "Debidwar Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Cumilla",
+        "upazila": "Debidwar",
+        "address": "Debidwar, Cumilla (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Emergency",
+        "Dermatology",
+        "Orthopaedics",
+        "General Surgery",
+        "Medicine"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 20,
+          "occupied": 18,
+          "available": 2
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-019",
+      "facility_name": "Golapganj Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Sylhet",
+        "upazila": "Golapganj",
+        "address": "Golapganj, Sylhet (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Gynaecology & Obstetrics",
+        "Dermatology",
+        "ENT",
+        "Orthopaedics",
+        "Emergency"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 20,
+          "occupied": 16,
+          "available": 4
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-U-020",
+      "facility_name": "Savar Upazila Health Complex (TEST)",
+      "facility_type": "upazila_health_complex",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": null,
+        "district": "Dhaka",
+        "upazila": "Savar",
+        "address": "Savar, Dhaka (sample address; verify actual address)"
+      },
+      "service_level": "upazila",
+      "departments": [
+        "Emergency",
+        "Dermatology",
+        "Orthopaedics",
+        "Paediatrics",
+        "ENT"
+      ],
+      "specialties_available": [],
+      "capacity": {
+        "general_beds": {
+          "total": 31,
+          "occupied": 25,
+          "available": 6
+        },
+        "icu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 0,
+          "occupied": 0,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "basic_diagnostics",
+        "inpatient"
+      ],
+      "referral_capabilities": [
+        "district_hospital",
+        "medical_college_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-C-001",
+      "facility_name": "Khulna Medical College Hospital (TEST RECORD)",
+      "facility_type": "government_city_hospital",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": "Khulna",
+        "district": "Khulna",
+        "upazila": null,
+        "address": "Khulna Medical College Hospital, Khulna (sample address; verify actual address)"
+      },
+      "service_level": "district_or_city_referral",
+      "departments": [
+        "Medicine",
+        "General Surgery",
+        "Paediatrics",
+        "Gynaecology & Obstetrics",
+        "Emergency",
+        "Orthopaedics",
+        "ENT",
+        "Dermatology",
+        "Neurosurgery",
+        "Gastroenterology",
+        "Nephrology",
+        "Oncology",
+        "Neurology"
+      ],
+      "specialties_available": [
+        "Neurology",
+        "Cardiothoracic Surgery",
+        "Oncology",
+        "Urology",
+        "Neurosurgery"
+      ],
+      "capacity": {
+        "general_beds": {
+          "total": 250,
+          "occupied": 195,
+          "available": 55
+        },
+        "icu_beds": {
+          "total": 10,
+          "occupied": 9,
+          "available": 1
+        },
+        "hdu_beds": {
+          "total": 10,
+          "occupied": 3,
+          "available": 7
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "inpatient",
+        "surgery",
+        "diagnostics",
+        "specialist_consultation"
+      ],
+      "referral_capabilities": [
+        "upazila_health_complex",
+        "other_government_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-C-002",
+      "facility_name": "Jashore 250 Bed General Hospital (TEST RECORD)",
+      "facility_type": "government_city_hospital",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": "Jashore",
+        "district": "Jashore",
+        "upazila": null,
+        "address": "Jashore 250 Bed General Hospital, Jashore (sample address; verify actual address)"
+      },
+      "service_level": "district_or_city_referral",
+      "departments": [
+        "Medicine",
+        "General Surgery",
+        "Paediatrics",
+        "Gynaecology & Obstetrics",
+        "Emergency",
+        "Orthopaedics",
+        "ENT",
+        "Dermatology",
+        "Cardiology",
+        "Endocrinology",
+        "Neurosurgery",
+        "Gastroenterology",
+        "Neurology"
+      ],
+      "specialties_available": [
+        "Gastroenterology",
+        "Nephrology",
+        "Neurology",
+        "Urology",
+        "Cardiology"
+      ],
+      "capacity": {
+        "general_beds": {
+          "total": 150,
+          "occupied": 109,
+          "available": 41
+        },
+        "icu_beds": {
+          "total": 10,
+          "occupied": 7,
+          "available": 3
+        },
+        "hdu_beds": {
+          "total": 10,
+          "occupied": 10,
+          "available": 0
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "inpatient",
+        "surgery",
+        "diagnostics",
+        "specialist_consultation"
+      ],
+      "referral_capabilities": [
+        "upazila_health_complex",
+        "other_government_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-C-003",
+      "facility_name": "Shaheed Sheikh Abu Naser Specialized Hospital (TEST RECORD)",
+      "facility_type": "government_city_hospital",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": "Khulna",
+        "district": "Khulna",
+        "upazila": null,
+        "address": "Shaheed Sheikh Abu Naser Specialized Hospital, Khulna (sample address; verify actual address)"
+      },
+      "service_level": "district_or_city_referral",
+      "departments": [
+        "Medicine",
+        "General Surgery",
+        "Paediatrics",
+        "Gynaecology & Obstetrics",
+        "Emergency",
+        "Orthopaedics",
+        "ENT",
+        "Dermatology",
+        "Cardiology",
+        "Endocrinology",
+        "Cardiothoracic Surgery",
+        "Neurosurgery",
+        "Gastroenterology"
+      ],
+      "specialties_available": [
+        "Endocrinology",
+        "Neurology",
+        "Urology",
+        "Neurosurgery",
+        "Cardiology"
+      ],
+      "capacity": {
+        "general_beds": {
+          "total": 500,
+          "occupied": 411,
+          "available": 89
+        },
+        "icu_beds": {
+          "total": 10,
+          "occupied": 10,
+          "available": 0
+        },
+        "hdu_beds": {
+          "total": 6,
+          "occupied": 1,
+          "available": 5
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "inpatient",
+        "surgery",
+        "diagnostics",
+        "specialist_consultation"
+      ],
+      "referral_capabilities": [
+        "upazila_health_complex",
+        "other_government_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-C-004",
+      "facility_name": "Dhaka Medical College Hospital (TEST RECORD)",
+      "facility_type": "government_city_hospital",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": "Dhaka",
+        "district": "Dhaka",
+        "upazila": null,
+        "address": "Dhaka Medical College Hospital, Dhaka (sample address; verify actual address)"
+      },
+      "service_level": "district_or_city_referral",
+      "departments": [
+        "Medicine",
+        "General Surgery",
+        "Paediatrics",
+        "Gynaecology & Obstetrics",
+        "Emergency",
+        "Orthopaedics",
+        "ENT",
+        "Dermatology",
+        "Cardiology",
+        "Nephrology",
+        "Neurology",
+        "Gastroenterology",
+        "Oncology"
+      ],
+      "specialties_available": [
+        "Nephrology",
+        "Cardiology",
+        "Gastroenterology",
+        "Neurosurgery",
+        "Neurology"
+      ],
+      "capacity": {
+        "general_beds": {
+          "total": 200,
+          "occupied": 150,
+          "available": 50
+        },
+        "icu_beds": {
+          "total": 12,
+          "occupied": 9,
+          "available": 3
+        },
+        "hdu_beds": {
+          "total": 10,
+          "occupied": 6,
+          "available": 4
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "inpatient",
+        "surgery",
+        "diagnostics",
+        "specialist_consultation"
+      ],
+      "referral_capabilities": [
+        "upazila_health_complex",
+        "other_government_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    },
+    {
+      "hospital_id": "SHJ-H-C-005",
+      "facility_name": "Sir Salimullah Medical College Mitford Hospital (TEST RECORD)",
+      "facility_type": "government_city_hospital",
+      "ownership": "government",
+      "is_synthetic_record": true,
+      "location": {
+        "country": "Bangladesh",
+        "division": "Dhaka",
+        "district": "Dhaka",
+        "upazila": null,
+        "address": "Sir Salimullah Medical College Mitford Hospital, Dhaka (sample address; verify actual address)"
+      },
+      "service_level": "district_or_city_referral",
+      "departments": [
+        "Medicine",
+        "General Surgery",
+        "Paediatrics",
+        "Gynaecology & Obstetrics",
+        "Emergency",
+        "Orthopaedics",
+        "ENT",
+        "Dermatology",
+        "Nephrology",
+        "Urology",
+        "Neurosurgery",
+        "Cardiothoracic Surgery",
+        "Endocrinology"
+      ],
+      "specialties_available": [
+        "Nephrology",
+        "Urology",
+        "Neurosurgery",
+        "Cardiothoracic Surgery",
+        "Neurology"
+      ],
+      "capacity": {
+        "general_beds": {
+          "total": 250,
+          "occupied": 209,
+          "available": 41
+        },
+        "icu_beds": {
+          "total": 10,
+          "occupied": 6,
+          "available": 4
+        },
+        "hdu_beds": {
+          "total": 6,
+          "occupied": 4,
+          "available": 2
+        }
+      },
+      "services": [
+        "outpatient",
+        "emergency",
+        "inpatient",
+        "surgery",
+        "diagnostics",
+        "specialist_consultation"
+      ],
+      "referral_capabilities": [
+        "upazila_health_complex",
+        "other_government_hospital"
+      ],
+      "contact": {
+        "phone": "NOT_A_REAL_PHONE",
+        "email": "NOT_A_REAL_EMAIL"
+      },
+      "operational_status": "sample_operational",
+      "last_capacity_update": "2026-11-12T12:00:00+06:00",
+      "capacity_data_note": "All bed counts are fictional test values; not live hospital vacancy."
+    }
+  ]
+}

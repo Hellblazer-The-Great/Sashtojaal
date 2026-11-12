@@ -1,0 +1,6 @@
+{
+  "name": "Sasthojaal - Government Hospital Referral & Post-Care Network",
+  "description": "Emergency referral and semi-automated transfer network for Bangladesh government registered doctors and hospitals with real-time bed tracking and post-care reverse directives.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
